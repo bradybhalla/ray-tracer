@@ -1,4 +1,8 @@
 (executable
  (public_name ray_tracer)
- (name main)
- (libraries ray_tracer))
+ (name render)
+ (libraries ray_tracer)
+
+ ;TODO: remove later
+ (flags (:standard -warn-error -A)))
+
