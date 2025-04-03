@@ -1,4 +1,4 @@
-open Ray_tracer
+open Ray_tracer.Math
 
 type t = {
   fov : float;

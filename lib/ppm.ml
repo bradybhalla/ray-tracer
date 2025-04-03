@@ -1,3 +1,5 @@
+open Math
+
 type rgb = int * int * int
 
 module type ImageProvider = sig

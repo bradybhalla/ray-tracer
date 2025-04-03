@@ -1,4 +1,5 @@
 open Ray_tracer
+open Ray_tracer.Math
 
 type render_params = { samples_per_pixel : int }
 
@@ -12,8 +13,8 @@ module Render = struct
 
   let get_dim (render : t) = (`Col render.width, `Row render.height)
 
-  let sample_at_pixel (camera : Camera.t) (scene : Object.t) col row =
-    let ray = Camera.get_ray camera col row in
+  let sample_at_pixel (camera : Camera.t) (scene : Object.t) (`Col col) (`Row row) =
+    let ray = Camera.get_ray camera (`Col col) (`Row row) in
     let intersect = Object.ray_intersection ray scene in
     match intersect with
     | None -> Vec3.create 0. 0. 0.

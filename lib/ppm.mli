@@ -1,3 +1,5 @@
+open Math
+
 module type ImageProvider = sig
   type t
   val get_dim : t -> [`Col of int] * [`Row of int]
