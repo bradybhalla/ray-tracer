@@ -1,4 +1,4 @@
-open Ray_tracer.Math
+open Math
 
 type t = {pos: Vec3.t; radius: float}
 

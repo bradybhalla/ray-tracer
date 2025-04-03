@@ -21,3 +21,10 @@ module Ray = struct
   let normalize ray = { ray with dir = Vec3.normalize ray.dir }
   let at time ray = Vec3.(ray.origin +@ (ray.dir *@ time))
 end
+
+module Sample = struct
+  let unit_vec3 () =
+    let v = Vec3.create (Random.float 1.0) (Random.float 1.0) (Random.float 1.0) in
+    let v = Vec3.(v -@ Vec3.create 0.5 0.5 0.5) in
+    Vec3.normalize v
+end

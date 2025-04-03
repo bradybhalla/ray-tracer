@@ -4,3 +4,4 @@
 
 TODOS:
 - [ ] change polymorphic variants to named args
+- [ ] write benchmarking tests
