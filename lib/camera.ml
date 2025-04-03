@@ -10,7 +10,7 @@ type t = {
 }
 
 let create ?(fov = 0.5) ?(aspect_ratio = 16.0 /. 9.0)
-    ?(antialiasing_factor = 0.05) pixel_height =
+    ?(antialiasing_factor = 0.05) ~pixel_height () =
   {
     fov;
     aspect_ratio;
@@ -25,7 +25,7 @@ let get_virtual_dim camera =
   let height = 2.0 *. tan (camera.fov /. 2.0) in
   (`Width width, `Height height)
 
-let get_output_dim camera =
+let get_pixel_dim camera =
   let cols =
     int_of_float (camera.aspect_ratio *. float_of_int camera.pixel_height)
   in
@@ -34,7 +34,7 @@ let get_output_dim camera =
 
 let get_ray camera (`Col c) (`Row r) : Ray.t =
   let `Width width, `Height height = get_virtual_dim camera in
-  let `Col cols, `Row rows = get_output_dim camera in
+  let `Col cols, `Row rows = get_pixel_dim camera in
   let x =
     ((float_of_int c +. 0.5) /. float_of_int cols *. width) -. (width /. 2.0)
   in

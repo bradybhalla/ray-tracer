@@ -23,7 +23,7 @@ let update_with_new_sample data (`Col x) (`Row y) (c : Vec3.t) =
   data.(y).(x) <- new_info
 
 let create ~(camera : Camera.t) ~(scene : Object.t) ~(params : params) ~(tracer : tracer) : t =
-  let `Col width, `Row height = Camera.get_output_dim camera in
+  let `Col width, `Row height = Camera.get_pixel_dim camera in
   let data =
     Array.make_matrix height width
       { color_sum = Vec3.create 0. 0. 0.; num = 0 }
