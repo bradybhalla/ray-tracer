@@ -1,9 +1,14 @@
 open Math
 open Object
 
-type scene = { camera : Camera.t; primitives : Primitive.t list }
+type scene = {
+  camera : Camera.t;
+  primitives : Primitive.t list;
+  lights : Light.t list;
+}
+
 type params = { samples_per_pixel : int }
-type tracer = Primitive.t list -> Ray.t -> Vec3.t
+type tracer = scene -> Ray.t -> Vec3.t
 
 (* pixel color is stored as a sum of all samples and the number of samples *)
 (* sum of all samples and the number of samples *)
@@ -30,7 +35,7 @@ let create ~(scene : scene) ~(params : params) ~(tracer : tracer) : t =
     for x = 0 to width - 1 do
       for _ = 1 to params.samples_per_pixel do
         let ray = Camera.get_ray scene.camera (`Col x) (`Row y) in
-        let color = tracer scene.primitives ray in
+        let color = tracer scene ray in
         update_with_new_sample data (`Col x) (`Row y) color
       done
     done
@@ -40,3 +45,4 @@ let create ~(scene : scene) ~(params : params) ~(tracer : tracer) : t =
 let get_pixel_color (render : t) (`Col x) (`Row y) : Vec3.t =
   let pixel_val = render.data.(y).(x) in
   pixel_val.color_sum /@ float_of_int pixel_val.num
+  |> Vec3.max 0.0 |> Vec3.min 1.0
