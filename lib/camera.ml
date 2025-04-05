@@ -6,19 +6,10 @@ type t = {
   near : float;
   far : float;
   pixel_height : int;
-  antialiasing_factor : float;
 }
 
-let create ?(fov = 0.5) ?(aspect_ratio = 16.0 /. 9.0)
-    ?(antialiasing_factor = 0.05) ~pixel_height () =
-  {
-    fov;
-    aspect_ratio;
-    near = 5.0;
-    far = 100.0;
-    pixel_height;
-    antialiasing_factor;
-  }
+let create ?(fov = 0.5) ?(aspect_ratio = 16.0 /. 9.0) ~pixel_height () =
+  { fov; aspect_ratio; near = 5.0; far = 100.0; pixel_height }
 
 let get_virtual_dim camera =
   let width = camera.aspect_ratio *. 2.0 *. tan (camera.fov /. 2.0) in
@@ -42,5 +33,5 @@ let get_ray camera (`Col c) (`Row r) : Ray.t =
     ((float_of_int r +. 0.5) /. float_of_int rows *. height) -. (height /. 2.0)
   in
   let dir = Vec3.create x y 1.0 |> Vec3.normalize in
-  let origin = Vec3.(Sample.unit_vec3 () *@ camera.antialiasing_factor) in
+  let origin = Vec3.create 0.0 0.0 0.0 in
   { origin; dir }

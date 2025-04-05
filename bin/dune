@@ -2,7 +2,6 @@
  (public_name ray_tracer)
  (name shading)
  (libraries ray_tracer)
-
  ;TODO: remove later
- (flags (:standard -warn-error -A)))
-
+ (flags
+  (:standard -warn-error -A)))
