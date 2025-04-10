@@ -1,6 +1,6 @@
 (executable
  (public_name ray_tracer)
- (name shading)
+ (name phong_tracer)
  (libraries ray_tracer)
  ;TODO: remove later
  (flags

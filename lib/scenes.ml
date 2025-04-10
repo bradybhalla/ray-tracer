@@ -1,4 +1,4 @@
-open Object
+open Entity
 open Math
 open Render
 
@@ -33,10 +33,16 @@ let two_spheres_scene pixel_height =
             Plane
               {
                 normal = Vec3.create 0.0 (-1.0) 0.0;
-                pos = Vec3.create 0.0 0.5 0.0;
+                pos = Vec3.create 0.0 1.5 0.0;
               };
           material = Material.create `Green;
         };
+        {
+          shape =
+            Sphere { pos = Vec3.create (-10.0) (-30.0) (-30.0); radius = 10.0 };
+          material = Light;
+        };
       ];
-    lights = [ Point { pos = Vec3.create 0.0 (-50.0) 0.0; power = 2000.0 } ];
+    lights =
+      [ Point { pos = Vec3.create (-10.0) (-30.0) (-30.0); power = 2000.0 } ];
   }

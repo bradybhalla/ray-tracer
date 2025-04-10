@@ -1,5 +1,5 @@
 open Math
-open Object
+open Entity
 
 type scene = {
   camera : Camera.t;

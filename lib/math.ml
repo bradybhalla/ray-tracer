@@ -29,6 +29,12 @@ module Vec3 = struct
       y = (u.z *. v.x) -. (u.x *. v.z);
       z = (u.x *. v.y) -. (u.y *. v.x);
     }
+
+  let is_close v1 v2 =
+    let eps = 0.0001 in
+    abs_float (v1.x -. v2.x) < eps
+    && abs_float (v1.y -. v2.y) < eps
+    && abs_float (v1.z -. v2.z) < eps
 end
 
 let ( +@ ) = Vec3.add
