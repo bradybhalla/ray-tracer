@@ -75,8 +75,6 @@ module Primitive = struct
     let { shape; material } = prim in
     match shape with
     | Sphere { pos; radius } ->
-        (* TODO: currently stub code that is not very reliable  *)
-        (* also should eventually output an actual intersection type  *)
         let a = Vec3.dot ray.dir ray.dir in
         let b = -2.0 *. Vec3.dot ray.dir (pos -@ ray.origin) in
         let c =

@@ -50,6 +50,6 @@ let phong (scene : Render.scene) (ray : Ray.t) =
 
 let () =
   Render.create
-    ~scene:(Scenes.two_spheres_scene 800)
-    ~params:{ samples_per_pixel = 10 } ~tracer:phong
+    ~scene:(Scenes.two_spheres_scene 200)
+    ~params:{ samples_per_pixel = 2 } ~tracer:phong
   |> Ppm.of_render |> Ppm.print
