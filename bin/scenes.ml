@@ -16,12 +16,14 @@ let spheres_scene pixel_height =
           let mat = if i mod 2 = 0 then `Red else `Blue in
           make_sphere (float_of_int (5 - (2 * i))) 0.0 mat 1.0)
       @ List.init 6 (fun i ->
-          make_sphere (float_of_int (5 - (2 * i))) (-2.0) (`Glass 2.5) 0.75)
+            make_sphere (float_of_int (5 - (2 * i))) (-2.0) (`Glass 2.5) 0.75)
       @ [
-          Primitive.{
-            shape = Sphere { pos = Vec3.create 0.0 (-4.0) (15.0); radius = 12.0 };
-            material = Material.create (`Mirror);
-          };
+          Primitive.
+            {
+              shape =
+                Sphere { pos = Vec3.create 0.0 (-4.0) 15.0; radius = 12.0 };
+              material = Material.create `Mirror;
+            };
           {
             shape =
               Plane

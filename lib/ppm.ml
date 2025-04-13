@@ -28,7 +28,8 @@ let to_string (ppm : t) =
     header pixel_strings
 
 let print (ppm : t) = to_string ppm |> print_string
-let save (filename : string) (ppm : t)  = 
+
+let save (filename : string) (ppm : t) =
   let oc = open_out filename in
   to_string ppm |> output_string oc;
   close_out oc

@@ -16,8 +16,8 @@ let phong (scene : Render.scene) (ray : Ray.t) =
         | None -> false
         | Some i -> not (Vec3.is_close i.point int.point))
   in
-  let get_phong_color (props : Material.phong_props)
-      (int : Intersection.t) (light : Light.t) =
+  let get_phong_color (props : Material.phong_props) (int : Intersection.t)
+      (light : Light.t) =
     match light with
     | Point { pos; power } ->
         if is_shadowed int light then props.ambient

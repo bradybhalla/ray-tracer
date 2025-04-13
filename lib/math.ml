@@ -42,4 +42,3 @@ let ( +@ ) = Vec3.add
 let ( -@ ) = Vec3.sub
 let ( *@ ) = Vec3.cmul
 let ( /@ ) = Vec3.cdiv
-
