@@ -16,7 +16,7 @@ let phong (scene : Render.scene) (ray : Ray.t) =
         | None -> false
         | Some i -> not (Vec3.is_close i.point int.point))
   in
-  let shade_phong_from_light (props : Material.phong_props)
+  let get_phong_color (props : Material.phong_props)
       (int : Intersection.t) (light : Light.t) =
     match light with
     | Point { pos; power } ->
@@ -34,7 +34,7 @@ let phong (scene : Render.scene) (ray : Ray.t) =
     | Some i -> (
         match i.material with
         | Phong props ->
-            List.map (shade_phong_from_light props i) scene.lights
+            List.map (get_phong_color props i) scene.lights
             |> List.fold_left ( +@ ) Vec3.zero
         | Reflective ->
             if max_depth <= 0 then Vec3.zero
@@ -49,17 +49,3 @@ let phong (scene : Render.scene) (ray : Ray.t) =
         )
   in
   helper ray 10
-
-let render n i = 
-  Printf.printf "Processing frame %d/%d" (i+1) n;
-  print_newline ();
-  Render.create
-    ~scene:(Scenes.box_room_scene 800 (float_of_int i /. float_of_int n))
-    ~params:{ samples_per_pixel = 10 } ~tracer:phong
-  |> Ppm.of_render
-
-let () =
-  let n = 30 in
-  (* render n 0 |> Ppm.print *)
-  let indices = List.init n (Fun.id) in
-  List.iter (fun i -> render n i |> Ppm.save (Printf.sprintf "frame_%05d.ppm" i)) indices

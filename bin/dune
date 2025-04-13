@@ -1,7 +1,7 @@
 (executable
- (public_name ray_tracer)
- (name phong_tracer)
- (libraries ray_tracer)
- ;TODO: remove later
- (flags
-  (:standard -warn-error -A)))
+ (name single_render)
+ (libraries ray_tracer))
+
+(executable
+ (name animation)
+ (libraries ray_tracer))
