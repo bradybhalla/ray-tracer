@@ -1,24 +1,23 @@
 open Ray_tracer
+open Ray_tracer.Utils
 open Ray_tracer.Math
-open Ray_tracer.Entity
 
 let phong (scene : Render.scene) (ray : Ray.t) =
   let is_shadowed (int : Intersection.t) (light : Light.t) =
     match light with
-    | Point { pos; _ } ->
-        let light_ray : Ray.t =
-          { origin = pos; dir = int.point -@ pos |> Vec3.normalize }
+    | Point { pos; _ } -> (
+        let light_ray =
+          Ray.(create ~origin:pos ~dir:(int.point -@ pos) () |> normalize)
         in
         let int' =
-          Primitive.get_first_nonlight_intersection scene.primitives light_ray
+          Primitive.get_first_intersection scene.primitives light_ray
         in
-        Option.map
-          (fun (i : Intersection.t) -> not (Vec3.is_close i.point int.point))
-          int'
-        |> Option.value ~default:true
+        match int' with
+        | None -> false
+        | Some i -> not (Vec3.is_close i.point int.point))
   in
-  let shade_phong_from_light (props : Material.phong_props) (int : Intersection.t)
-      (light : Light.t) =
+  let shade_phong_from_light (props : Material.phong_props)
+      (int : Intersection.t) (light : Light.t) =
     match light with
     | Point { pos; power } ->
         if is_shadowed int light then props.ambient
@@ -29,27 +28,38 @@ let phong (scene : Render.scene) (ray : Ray.t) =
           *@ (power /. light_dist /. light_dist)
   in
   let rec helper (ray : Ray.t) (max_depth : int) =
-    Primitive.get_first_intersection scene.primitives ray
-    |> Option.fold ~none:Vec3.zero ~some:(fun (int : Intersection.t) ->
-           match int.material with
-           | Phong props ->
-               List.map (shade_phong_from_light props int) scene.lights
-               |> List.fold_left ( +@ ) Vec3.zero
-           | Reflective ->
-               if max_depth <= 0 then Vec3.create 0.05 0.05 0.05
-               else
-                 let reflect_dir = Vec3.reflect ray.dir int.normal in
-                 let reflect_origin = int.point +@ (int.normal *@ 0.001) in
-                 Vec3.create 0.1 0.1 0.1
-                 +@ helper
-                      { origin = reflect_origin; dir = reflect_dir }
-                      (max_depth - 1)
-           | Light -> Vec3.create 1.0 1.0 1.0)
+    let int = Primitive.get_first_intersection scene.primitives ray in
+    match int with
+    | None -> Vec3.zero
+    | Some i -> (
+        match i.material with
+        | Phong props ->
+            List.map (shade_phong_from_light props i) scene.lights
+            |> List.fold_left ( +@ ) Vec3.zero
+        | Reflective ->
+            if max_depth <= 0 then Vec3.zero
+            else
+              let reflected_ray = Ray.reflect ray i in
+              Vec3.create 0.02 0.02 0.02 +@ helper reflected_ray (max_depth - 1)
+        | Refractive _ ->
+            if max_depth <= 0 then Vec3.zero
+            else
+              let refracted_ray = Ray.refract ray i in
+              Vec3.create 0.02 0.02 0.02 +@ helper refracted_ray (max_depth - 1)
+        )
   in
   helper ray 10
 
-let () =
+let render n i = 
+  Printf.printf "Processing frame %d/%d" (i+1) n;
+  print_newline ();
   Render.create
-    ~scene:(Scenes.two_spheres_scene 200)
-    ~params:{ samples_per_pixel = 2 } ~tracer:phong
-  |> Ppm.of_render |> Ppm.print
+    ~scene:(Scenes.box_room_scene 800 (float_of_int i /. float_of_int n))
+    ~params:{ samples_per_pixel = 10 } ~tracer:phong
+  |> Ppm.of_render
+
+let () =
+  let n = 30 in
+  (* render n 0 |> Ppm.print *)
+  let indices = List.init n (Fun.id) in
+  List.iter (fun i -> render n i |> Ppm.save (Printf.sprintf "frame_%05d.ppm" i)) indices

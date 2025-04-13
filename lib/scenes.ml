@@ -48,8 +48,9 @@ let make_wall (pos : Vec3.t) mat : Primitive.t =
   }
 
 let box_room_scene pixel_height t =
+  let v = 1.0 +. 2.0 *. exp ((-6.0) *.t) in
   {
-    camera = Camera.create ~pos:(Vec3.create 0.0 1.0 (-5.0)) ~look_at:(Vec3.create 0.0 1.0 4.0) ~pixel_height ();
+    camera = Camera.create ~pos:(Vec3.create 0.0 1.0 (-3.0)) ~look_at:(Vec3.create 0.0 1.0 4.0) ~pixel_height ();
     primitives =
       [
         make_wall (Vec3.create 3.0 0.0 0.0) `Mirror;
@@ -71,8 +72,8 @@ let box_room_scene pixel_height t =
           material = Material.create `Mirror;
         };
         {
-          shape = Sphere { pos = Vec3.create (0.5) 1.5 ((-2.0) *. sin t *. sin t); radius = 0.5 };
-          material = Material.create `Glass;
+          shape = Sphere { pos = Vec3.create (0.5) 1.5 (-0.5); radius = 0.5 };
+          material = Material.create (`Glass v);
         };
       ];
     lights = [ Point { pos = Vec3.create 0.0 (-1.8) 0.0; power = 20.0 } ];

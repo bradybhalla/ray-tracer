@@ -7,7 +7,7 @@ type phong_props = {
   shininess : float;
 }
 
-type t = Phong of phong_props | Reflective | Refractive
+type t = Phong of phong_props | Reflective | Refractive of float
 
 let create = function
   | `Red ->
@@ -43,7 +43,7 @@ let create = function
           shininess = 10.0;
         }
   | `Mirror -> Reflective
-  | `Glass -> Refractive
+  | `Glass index -> Refractive index
 
 let get_phong (mat : phong_props) (eye_dir : Vec3.t) (normal : Vec3.t)
     (light_dir : Vec3.t) =

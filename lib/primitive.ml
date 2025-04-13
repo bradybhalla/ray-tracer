@@ -23,6 +23,9 @@ let get_intersection (prim : t) (ray : Ray.t) =
           (* both intersections are negative *)
           None
         else if t1 > 0.0 then
+          let inside_refractive =
+            match material with Refractive i -> i | _ -> 1.0
+          in
           (* both are positive (t1 is the min) *)
           Some
             Intersection.
@@ -31,7 +34,7 @@ let get_intersection (prim : t) (ray : Ray.t) =
                 point = Ray.at ray t1;
                 normal = Ray.at ray t1 -@ pos |> Vec3.normalize;
                 material;
-                flipped_refractive_index = 1.5;
+                flipped_refractive_index = inside_refractive;
               }
         else
           (* inside sphere (t2 is min positive), flip normal *)
