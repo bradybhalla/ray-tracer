@@ -1,4 +1,5 @@
 open Math
+open Utils
 
 type t = {
   fov : float;
@@ -53,4 +54,4 @@ let get_ray camera (`Col c) (`Row r) : Ray.t =
   in
   let dir = (camera.ex *@ x) +@ (camera.ey *@ y) +@ camera.ez in
   let origin = camera.pos in
-  { origin; dir }
+  Ray.(create ~origin ~dir () |> normalize)

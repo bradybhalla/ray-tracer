@@ -1,5 +1,5 @@
 open Math
-open Entity
+open Utils
 
 type scene = {
   camera : Camera.t;
