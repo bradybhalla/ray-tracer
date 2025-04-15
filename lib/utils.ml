@@ -6,16 +6,18 @@ module Intersection = struct
     point : Vec3.t;
     normal : Vec3.t;
     material : Material.t;
-    (* refractive index on the other side of the intersection *)
-    flipped_refractive_index : float;
+    tex_coord: Texture.tex_coord;
+
+    (* the medium on the other side of the intersection *)
+    other_medium: Medium.t;
   }
 end
 
 module Ray = struct
-  type t = { origin : Vec3.t; dir : Vec3.t; refractive_index : float }
+  type t = { origin : Vec3.t; dir : Vec3.t; medium : Medium.t }
 
-  let create ~origin ~dir ?(refractive_index = 1.0) () =
-    { origin; dir; refractive_index }
+  let create ~origin ~dir ~medium =
+    { origin; dir; medium }
 
   let normalize ray = { ray with dir = Vec3.normalize ray.dir }
   let at ray time = ray.origin +@ (ray.dir *@ time)
@@ -24,19 +26,16 @@ module Ray = struct
     {
       origin = i.point +@ (i.normal *@ 0.001);
       dir = Vec3.reflect ray.dir i.normal;
-      refractive_index = ray.refractive_index;
+      medium = ray.medium;
     }
 
-  let refract (ray : t) (i : Intersection.t) =
-    let ni_nt = ray.refractive_index /. i.flipped_refractive_index in
-    let cos_t = -.Vec3.dot ray.dir i.normal in
-    let perp = (ray.dir +@ (i.normal *@ cos_t)) *@ ni_nt in
-    let parallel = i.normal *@ -.sqrt (1.0 -. Vec3.mag_sq perp) in
+  let refract (ray : t) (i : Intersection.t) (med_inc: Medium.t) (med_trans: Medium.t) =
     {
-      origin = i.point -@ (i.normal *@ 0.001);
-      dir = perp +@ parallel;
-      refractive_index = i.flipped_refractive_index;
+      origin = i.point +@ (i.normal *@ -0.001);
+      dir = Vec3.refract ray.dir i.normal (med_inc /. med_trans);
+      medium = i.other_medium
     }
+
 end
 
 module Sample = struct

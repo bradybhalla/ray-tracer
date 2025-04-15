@@ -24,6 +24,12 @@ module Vec3 = struct
     let scaled_normal = cmul n (2.0 *. dot_product) in
     sub v scaled_normal
 
+  let refract v n eta_i_div_eta_t =
+    let cos_t = -.dot v n in
+    let perp = cmul (add v (cmul n cos_t)) eta_i_div_eta_t in
+    let parallel = cmul n (-.sqrt (1.0 -. mag_sq perp)) in
+    add perp parallel
+
   let cross u v =
     {
       x = (u.y *. v.z) -. (u.z *. v.y);

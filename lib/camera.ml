@@ -28,11 +28,13 @@ let create ?(pos = Vec3.create 0.0 0.0 (-10.0)) ?(look_at = Vec3.zero)
     pixel_height;
   }
 
+(* dimension of the camera if its origin was a distance of 1 away *)
 let get_virtual_dim camera =
   let width = camera.aspect_ratio *. 2.0 *. tan (camera.fov /. 2.0) in
   let height = 2.0 *. tan (camera.fov /. 2.0) in
   (`Width width, `Height height)
 
+(* pixel dimension of the camera *)
 let get_pixel_dim camera =
   let cols =
     int_of_float (camera.aspect_ratio *. float_of_int camera.pixel_height)
@@ -54,4 +56,4 @@ let get_ray camera (`Col c) (`Row r) : Ray.t =
   in
   let dir = (camera.ex *@ x) +@ (camera.ey *@ y) +@ camera.ez in
   let origin = camera.pos in
-  Ray.(create ~origin ~dir () |> normalize)
+  Ray.(create ~origin ~dir ~medium:1.0 |> normalize)
