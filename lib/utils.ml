@@ -1,6 +1,8 @@
 open Math
 
 let ( >>= ) = Option.bind
+let ( =<< ) f x = x >>= f
+let lift f = Fun.compose Option.some f
 
 type shape_intersection = {
   point : Vec3.t;

@@ -3,11 +3,13 @@ open Utils
 
 module type ShapeInterface = sig
   type t
+
   val intersect : t -> Ray.t -> (float * shape_intersection) option
 end
 
-type sphere = {pos: Vec3.t; radius: float}
-module Sphere : ShapeInterface with type t=sphere = struct
+type sphere = { pos : Vec3.t; radius : float }
+
+module Sphere : ShapeInterface with type t = sphere = struct
   type t = sphere
 
   let _sphere_get_times pos radius (ray : Ray.t) =
@@ -55,7 +57,8 @@ module Sphere : ShapeInterface with type t=sphere = struct
     _sphere_get_times pos radius ray >>= _sphere_get_intersection pos ray
 end
 
-type plane = {normal: Vec3.t; pos : Vec3.t}
+type plane = { normal : Vec3.t; pos : Vec3.t }
+
 module Plane : ShapeInterface with type t = plane = struct
   type t = plane
 

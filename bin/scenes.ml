@@ -18,7 +18,7 @@ let spheres_scene pixel_height =
     primitives =
       [
         make_sphere (-2.0) 0.0 `Mirror 1.0;
-        make_sphere (2.0) 0.0 `Glass 1.0;
+        make_sphere 2.0 0.0 `Glass 1.0;
         make_sphere 0.0 0.0 `Red 1.0;
         {
           shape =

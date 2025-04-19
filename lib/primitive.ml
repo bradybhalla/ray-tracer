@@ -2,7 +2,7 @@ open Utils
 
 type t = { shape : Shape.t; material : Material.t; medium : Medium.spec }
 
-let get_intersection (prim : t) ((t,si) : (float * shape_intersection)) :
+let get_intersection (prim : t) ((t, si) : float * shape_intersection) :
     (float * intersection) option =
   Some
     ( t,
@@ -24,4 +24,4 @@ let get_first_intersection (prims : t list) (ray : Ray.t) =
   prims
   |> List.map (fun p -> Shape.intersect p.shape ray >>= get_intersection p)
   |> List.fold_left cmp None
-  |> (fun x -> x >>= Fun.compose Option.some snd)
+  |> ( =<< ) (lift snd)
