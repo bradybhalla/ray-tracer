@@ -1,7 +1,9 @@
 # ray-tracer
 
-`dune exec bin/render.exe | magick - out.png && magick out.png -scale 800x800 out.png && open out.png`
+## Usage
+- `make render` -- render a single image from "single_render.ml"
+- `make animation` -- render an animation from "animation.ml"
 
-TODOS:
+## TODOs
 - [ ] change polymorphic variants to named args
 - [ ] write benchmarking tests
