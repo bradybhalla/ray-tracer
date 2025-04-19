@@ -6,10 +6,10 @@ let make_sphere x z mat r : Primitive.t =
   {
     shape = Sphere { pos = Vec3.create x (1.0 -. r) z; radius = r };
     material = Material.create mat;
-    medium_transition =
+    medium =
       (match mat with
       | `Glass -> { inside = 2.5; outside = 1.0 }
-      | _ -> Medium.default_transition);
+      | _ -> Medium.default_spec);
   }
 
 let spheres_scene pixel_height =
@@ -27,8 +27,8 @@ let spheres_scene pixel_height =
                 normal = Vec3.create 0.0 (-1.0) 0.0;
                 pos = Vec3.create 0.0 1.0 0.0;
               };
-          material = Material.create `Chessboard;
-          medium_transition = Medium.default_transition;
+          material = Material.create `Checkerboard;
+          medium = Medium.default_spec;
         };
       ];
     lights =
@@ -39,7 +39,7 @@ let make_wall (pos : Vec3.t) mat : Primitive.t =
   {
     shape = Plane { normal = Vec3.normalize (pos *@ -1.0); pos };
     material = Material.create mat;
-    medium_transition = Medium.default_transition;
+    medium = Medium.default_spec;
   }
 
 let room_scene pixel_height t =
@@ -60,22 +60,22 @@ let room_scene pixel_height t =
         {
           shape = Sphere { pos = Vec3.create (-1.3) 1.5 1.0; radius = 0.5 };
           material = Material.create `Red;
-          medium_transition = Medium.default_transition;
+          medium = Medium.default_spec;
         };
         {
           shape = Sphere { pos = Vec3.create 1.0 1.5 1.0; radius = 0.5 };
           material = Material.create `Blue;
-          medium_transition = Medium.default_transition;
+          medium = Medium.default_spec;
         };
         {
           shape = Sphere { pos = Vec3.create (-0.5) 1.0 2.0; radius = 1.0 };
           material = Material.create `Mirror;
-          medium_transition = Medium.default_transition;
+          medium = Medium.default_spec;
         };
         {
           shape = Sphere { pos = Vec3.create 0.5 1.5 (-0.5); radius = 0.5 };
           material = Material.create `Glass;
-          medium_transition = { inside = v; outside = 1.0 };
+          medium = { inside = v; outside = 1.0 };
         };
       ];
     lights = [ Point { pos = Vec3.create 0.0 (-1.8) 0.0; power = 20.0 } ];

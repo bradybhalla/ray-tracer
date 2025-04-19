@@ -56,4 +56,4 @@ let get_ray camera (`Col c) (`Row r) : Ray.t =
   in
   let dir = (camera.ex *@ x) +@ (camera.ey *@ y) +@ camera.ez in
   let origin = camera.pos in
-  Ray.(create ~origin ~dir ~medium:1.0 |> normalize)
+  Ray.(create ~origin ~dir |> normalize)
