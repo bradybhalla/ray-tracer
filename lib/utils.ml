@@ -39,13 +39,3 @@ module Ray = struct
           (i.medium_incident /. i.medium_transmitted);
     }
 end
-
-module Sample = struct
-  (* TODO: not correct sampling *)
-  let unit_vec3 () =
-    let v =
-      Vec3.create (Random.float 1.0) (Random.float 1.0) (Random.float 1.0)
-    in
-    let v = v -@ Vec3.create 0.5 0.5 0.5 in
-    Vec3.normalize v
-end

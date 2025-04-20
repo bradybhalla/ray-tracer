@@ -6,24 +6,21 @@ open Ray_tracer.Math
 let phong (scene : Render.scene) (ray : Ray.t) =
   let is_shadowed (int : intersection) (light : Light.t) =
     match light with
-    | Point { pos; _ } -> (
+    | Point { pos; _ } ->
         let light_ray =
           Ray.(create ~origin:pos ~dir:(int.si.point -@ pos) |> normalize)
         in
         let int' =
           Primitive.get_first_intersection scene.primitives light_ray
         in
-        match int' with
-        | None -> false
-        | Some i -> not (Vec3.is_close i.si.point int.si.point))
+        Option.fold ~none:false
+          ~some:(fun i -> not (Vec3.is_close i.si.point int.si.point))
+          int'
   in
-  let get_phong_color (tex : ColorTexture.t) (int : intersection)
-      (light : Light.t) =
+  let get_phong_color (tex : Texture.t) (int : intersection) (light : Light.t) =
     match light with
     | Point { pos; power } ->
-        let color =
-          ColorTexture.eval tex int.si.tex_coord.u int.si.tex_coord.v
-        in
+        let color = Texture.eval tex int.si.tex_coord.u int.si.tex_coord.v in
         let ambient = color /@ 10.0 in
         let specular = Vec3.create 0.1 0.1 0.1 in
         let shininess = 10.0 in

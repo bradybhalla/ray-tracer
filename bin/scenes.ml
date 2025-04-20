@@ -12,22 +12,23 @@ let make_sphere x z mat r : Primitive.t =
       | _ -> Medium.default_spec);
   }
 
-let spheres_scene pixel_height =
+let spheres_scene pixel_height t =
   {
     camera = Camera.create ~pos:(Vec3.create 0.0 (-1.0) (-4.0)) ~pixel_height ();
     primitives =
       [
         make_sphere (-2.0) 0.0 `Mirror 1.0;
         make_sphere 2.0 0.0 `Glass 1.0;
-        make_sphere 0.0 0.0 `Red 1.0;
+        make_sphere 0.0 0.0 (`Checkerboard (22, 9)) 1.0;
         {
           shape =
             Plane
               {
                 normal = Vec3.create 0.0 (-1.0) 0.0;
                 pos = Vec3.create 0.0 1.0 0.0;
+                xdir = Vec3.create (cos (1.0 *. Float.pi *. t)) 0.0 (sin (1.0 *. Float.pi *. t))
               };
-          material = Material.create `Checkerboard;
+          material = Material.create (`Checkerboard (2, 2));
           medium = Medium.default_spec;
         };
       ];
@@ -37,7 +38,7 @@ let spheres_scene pixel_height =
 
 let make_wall (pos : Vec3.t) mat : Primitive.t =
   {
-    shape = Plane { normal = Vec3.normalize (pos *@ -1.0); pos };
+    shape = Plane { normal = Vec3.normalize (pos *@ -1.0); pos; xdir=Vec3.create 1.0 0.0 0.0 };
     material = Material.create mat;
     medium = Medium.default_spec;
   }

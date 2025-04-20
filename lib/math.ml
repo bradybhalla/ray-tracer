@@ -48,3 +48,28 @@ let ( +@ ) = Vec3.add
 let ( -@ ) = Vec3.sub
 let ( *@ ) = Vec3.cmul
 let ( /@ ) = Vec3.cdiv
+
+module Sample = struct
+  (* TODO: not correct sampling *)
+  let unit_vec3 () =
+    let v =
+      Vec3.create (Random.float 1.0) (Random.float 1.0) (Random.float 1.0)
+    in
+    let v = v -@ Vec3.create 0.5 0.5 0.5 in
+    Vec3.normalize v
+end
+
+let solve_quadratic a b c =
+  let sgnb = if b < 0.0 then -1.0 else 1.0 in
+  let discriminant = (b *. b) -. (4.0 *. a *. c) in
+  if discriminant < 0.0 then None
+  else
+    let term = -.b -. (sgnb *. sqrt discriminant) in
+    let t1 = term /. (2.0 *. a) in
+    let t2 = 2.0 *. c /. term in
+    let t1, t2 = (min t1 t2, max t1 t2) in
+    Some (t1, t2)
+
+let clamp minv maxv v = v |> min maxv |> max minv
+
+let decimal v = v -. floor v

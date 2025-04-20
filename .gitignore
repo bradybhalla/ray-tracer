@@ -2,5 +2,3 @@ _build/
 *.opam
 .DS_Store
 custom.lua
-*.ppm
-*.mp4

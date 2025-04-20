@@ -2,13 +2,25 @@ open Math
 
 type tex_coord = { u : float; v : float }
 
-module ColorTexture = struct
-  type t = Constant of Vec3.t | Checkered of Vec3.t * Vec3.t
+type t =
+  | Constant of Vec3.t
+  | Checkered of int * int * Vec3.t * Vec3.t
+  | Image of float array array
 
-  let eval tex u v =
-    match tex with
-    | Constant c -> c
-    | Checkered (c1, c2) ->
-        if (int_of_float (floor u) + int_of_float (floor v)) mod 2 = 0 then c1
-        else c2
-end
+let eval tex u v =
+  let u = clamp 0.0 1.0 u in
+  let v = clamp 0.0 1.0 v in
+  match tex with
+  | Constant c -> c
+  | Checkered (nu, nv, c1, c2) ->
+      if
+        (int_of_float (floor (float_of_int nu *. u))
+        + int_of_float (floor (float_of_int nv *. v)))
+        mod 2
+        = 0
+      then c1
+      else c2
+  | Image a ->
+      let _rows = Array.length a in
+      let _cols = Array.length a.(0) in
+      Vec3.create 0.0 0.0 0.0
