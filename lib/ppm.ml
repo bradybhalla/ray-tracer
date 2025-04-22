@@ -5,7 +5,7 @@ type t = {
   width : int;
   height : int;
   max_color_value : int;
-  data : rgb array array;
+  data : rgb list list;
 }
 
 let default_max_val = 255
@@ -15,17 +15,11 @@ let to_string (ppm : t) =
   let header =
     Printf.sprintf "P3\n%d %d\n%d\n" ppm.width ppm.height ppm.max_color_value
   in
-  let pixel_strings =
-    Array.map
-      (fun row ->
-        Array.map (fun (r, g, b) -> Printf.sprintf "%d %d %d " r g b) row)
-      ppm.data
+  let pixel_to_str (r, g, b) = Printf.sprintf "%d %d %d" r g b in
+  let row_strings =
+    List.map (fun row -> String.concat " " (List.map pixel_to_str row)) ppm.data
   in
-  Array.fold_left
-    (fun acc r ->
-      let row_string = Array.fold_left ( ^ ) "" r in
-      acc ^ row_string ^ "\n")
-    header pixel_strings
+  header ^ String.concat "\n" row_strings ^ "\n"
 
 let print (ppm : t) = to_string ppm |> print_string
 
@@ -35,24 +29,15 @@ let save (filename : string) (ppm : t) =
   close_out oc
 
 let of_render (render : Render.t) =
+  let val_of_color color =
+    int_of_float
+      (Float.pow color gamma_correction *. float_of_int default_max_val)
+  in
   let `Col width, `Row height = Render.get_dim render in
-  let data = Array.make_matrix height width (0, 0, 0) in
-  for y = 0 to height - 1 do
-    for x = 0 to width - 1 do
-      let color = Render.get_pixel_color render (`Col x) (`Row y) in
-      let r =
-        int_of_float
-          (Float.pow color.x gamma_correction *. float_of_int default_max_val)
-      in
-      let g =
-        int_of_float
-          (Float.pow color.y gamma_correction *. float_of_int default_max_val)
-      in
-      let b =
-        int_of_float
-          (Float.pow color.z gamma_correction *. float_of_int default_max_val)
-      in
-      data.(y).(x) <- (r, g, b)
-    done
-  done;
+  let data =
+    List.init height (fun y ->
+        List.init width (fun x ->
+            let color = Render.get_pixel_color render (`Col x) (`Row y) in
+            (val_of_color color.x, val_of_color color.y, val_of_color color.z)))
+  in
   { width; height; max_color_value = default_max_val; data }
