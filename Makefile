@@ -1,5 +1,8 @@
 DUNE = dune
 
+build:
+	$(DUNE) build
+
 render:
 	$(DUNE) exec bin/single_render.exe > tmp.ppm
 	open tmp.ppm
@@ -12,9 +15,6 @@ animation:
 		-c:v libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
 		-pix_fmt yuv420p tmp.mp4
 	open tmp.mp4
-
-build:
-	$(DUNE) build
 
 clean:
 	$(DUNE) clean
