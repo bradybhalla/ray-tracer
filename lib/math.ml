@@ -57,6 +57,8 @@ module Sample = struct
     in
     let v = v -@ Vec3.create 0.5 0.5 0.5 in
     Vec3.normalize v
+
+  let float () = Random.float 1.0
 end
 
 let solve_quadratic a b c =

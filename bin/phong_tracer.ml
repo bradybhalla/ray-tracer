@@ -17,7 +17,8 @@ let phong (scene : Render.scene) (ray : Ray.t) =
           ~some:(fun i -> not (Vec3.is_close i.si.point int.si.point))
           int'
   in
-  let get_phong_color (tex : Texture.t) (int : intersection) (light : Light.t) =
+  let get_phong_color (ray : Ray.t) (tex : Texture.t) (int : intersection)
+      (light : Light.t) =
     match light with
     | Point { pos; power } ->
         let color = Texture.eval tex int.si.tex_coord.u int.si.tex_coord.v in
@@ -38,25 +39,27 @@ let phong (scene : Render.scene) (ray : Ray.t) =
           in
           (ambient +@ diffuse +@ specular) *@ (power /. light_dist /. light_dist)
   in
-  let rec helper (ray : Ray.t) (max_depth : int) =
+  let rec diffuse ray tex i =
+    List.map (get_phong_color ray tex i) scene.lights
+    |> List.fold_left ( +@ ) Vec3.zero
+  and recurse f ray max_depth i =
+    if max_depth <= 0 then Vec3.zero
+    else
+      let recursed_ray = f ray i in
+      Vec3.create 0.02 0.02 0.02 +@ helper recursed_ray (max_depth - 1)
+  and helper (ray : Ray.t) (max_depth : int) =
     let int = Primitive.get_first_intersection scene.primitives ray in
     match int with
     | None -> Vec3.zero
     | Some i -> (
         match i.material with
-        | Diffuse color_tex ->
-            List.map (get_phong_color color_tex i) scene.lights
-            |> List.fold_left ( +@ ) Vec3.zero
-        | Reflective ->
-            if max_depth <= 0 then Vec3.zero
-            else
-              let reflected_ray = Ray.reflect ray i in
-              Vec3.create 0.02 0.02 0.02 +@ helper reflected_ray (max_depth - 1)
-        | Refractive ->
-            if max_depth <= 0 then Vec3.zero
-            else
-              let refracted_ray = Ray.refract ray i in
-              Vec3.create 0.02 0.02 0.02 +@ helper refracted_ray (max_depth - 1)
-        )
+        | Diffuse { tex; reflect_prob } ->
+            if Sample.float () < reflect_prob then
+              recurse Ray.reflect ray max_depth i
+            else diffuse ray tex i
+        | Refractive { reflect_prob } ->
+            if Sample.float () < reflect_prob then
+              recurse Ray.reflect ray max_depth i
+            else recurse Ray.refract ray max_depth i)
   in
   helper ray 10

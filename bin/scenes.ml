@@ -19,7 +19,7 @@ let spheres_scene pixel_height t =
       [
         make_sphere (-2.0) 0.0 `Mirror 1.0;
         make_sphere 2.0 0.0 `Glass 1.0;
-        make_sphere 0.0 0.0 (`Checkerboard (22, 9)) 1.0;
+        make_sphere 0.0 0.0 (`Gradient (22, 9)) 1.0;
         {
           shape =
             Plane
@@ -28,7 +28,7 @@ let spheres_scene pixel_height t =
                 pos = Vec3.create 0.0 1.0 0.0;
                 xdir = Vec3.create (cos (1.0 *. Float.pi *. t)) 0.0 (sin (1.0 *. Float.pi *. t))
               };
-          material = Material.create (`Checkerboard (2, 2));
+          material = Material.create (`Checkerboard (2,2));
           medium = Medium.default_spec;
         };
       ];

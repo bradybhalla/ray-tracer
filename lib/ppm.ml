@@ -11,7 +11,7 @@ type t = {
 let default_max_val = 255
 let gamma_correction = 1.0 /. 2.2
 
-let to_string (ppm : t) =
+let to_string (ppm : t) (_mode : [ `P3 ]) =
   let header =
     Printf.sprintf "P3\n%d %d\n%d\n" ppm.width ppm.height ppm.max_color_value
   in
@@ -21,12 +21,9 @@ let to_string (ppm : t) =
   in
   header ^ String.concat "\n" row_strings ^ "\n"
 
-let print (ppm : t) = to_string ppm |> print_string
-
-let save (filename : string) (ppm : t) =
-  let oc = open_out filename in
-  to_string ppm |> output_string oc;
-  close_out oc
+let to_array (ppm : t) =
+  let _ = ppm in
+  failwith "TODO"
 
 let of_render (render : Render.t) =
   let val_of_color color =
@@ -41,3 +38,14 @@ let of_render (render : Render.t) =
             (val_of_color color.x, val_of_color color.y, val_of_color color.z)))
   in
   { width; height; max_color_value = default_max_val; data }
+
+let of_file (filename : string) (_mode : [ `P6 ]) =
+  let _ = filename in
+  failwith "TODO"
+
+let print (ppm : t) = to_string ppm `P3 |> print_string
+
+let save (filename : string) (ppm : t) =
+  let oc = open_out filename in
+  to_string ppm `P3 |> output_string oc;
+  close_out oc
