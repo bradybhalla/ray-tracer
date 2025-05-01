@@ -3,8 +3,8 @@ open Phong_tracer
 
 let render () =
   Render.create
-    ~scene:(Scenes.spheres_scene 800 0.2)
-    ~params:{ samples_per_pixel = 10 } ~tracer:phong
+    ~scene:(Scenes.space_scene 800 0.9)
+    ~params:{ samples_per_pixel = 23 } ~tracer:phong
   |> Ppm.of_render
 
 let () = render () |> Ppm.print

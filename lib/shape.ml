@@ -14,9 +14,9 @@ module Sphere : ShapeInterface with type t = sphere = struct
 
   let tex_coord_of_point { pos; _ } point : Texture.tex_coord =
     let offset = Vec3.normalize (point -@ pos) in
-    let u = (atan2 offset.x offset.z /. (2.0 *. Float.pi)) +. 0.5 in
-    let v = (offset.y *. 0.5) +. 0.5 in
-    { u; v }
+    let u = (offset.y *. 0.5) +. 0.5 in
+    let v = (atan2 offset.x offset.z /. (2.0 *. Float.pi)) +. 0.5 in
+    { u ; v }
 
   let intersect_times { pos; radius } (ray : Ray.t) =
     let a = Vec3.dot ray.dir ray.dir in
@@ -37,7 +37,6 @@ module Sphere : ShapeInterface with type t = sphere = struct
           {
             point = Ray.at ray t1;
             normal = Ray.at ray t1 -@ s.pos |> Vec3.normalize;
-            (* TODO: sphere texture coordinate is not there yet *)
             tex_coord = tex_coord_of_point s (Ray.at ray t1);
             medium_transition = Out2In;
           } )
@@ -48,7 +47,6 @@ module Sphere : ShapeInterface with type t = sphere = struct
           {
             point = Ray.at ray t2;
             normal = s.pos -@ Ray.at ray t2 |> Vec3.normalize;
-            (* TODO: sphere texture coordinate is not there yet *)
             tex_coord = tex_coord_of_point s (Ray.at ray t2);
             medium_transition = In2Out;
           } )

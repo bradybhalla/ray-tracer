@@ -21,14 +21,14 @@ let phong (scene : Render.scene) (ray : Ray.t) =
       (light : Light.t) =
     match light with
     | Point { pos; power } ->
+        let light_dir = pos -@ int.si.point |> Vec3.normalize in
+        let light_dist = Vec3.mag (pos -@ int.si.point) in
         let color = Texture.eval tex int.si.tex_coord.u int.si.tex_coord.v in
         let ambient = color /@ 10.0 in
         let specular = Vec3.create 0.1 0.1 0.1 in
         let shininess = 10.0 in
-        if is_shadowed int light then ambient
+        if is_shadowed int light then ambient *@ (power /. light_dist /. light_dist)
         else
-          let light_dir = pos -@ int.si.point |> Vec3.normalize in
-          let light_dist = Vec3.mag (pos -@ int.si.point) in
           let diffuse =
             color *@ Vec3.dot int.si.normal light_dir |> Vec3.max 0.0
           in
@@ -54,9 +54,10 @@ let phong (scene : Render.scene) (ray : Ray.t) =
     | Some i -> (
         match i.material with
         | Diffuse { tex; reflect_prob } ->
-            if Sample.float () < reflect_prob then
-              recurse Ray.reflect ray max_depth i
-            else diffuse ray tex i
+            if reflect_prob = 0.0 then diffuse ray tex i
+            else
+              (recurse Ray.reflect ray max_depth i *@ reflect_prob)
+              +@ (diffuse ray tex i *@ (1.0 -. reflect_prob))
         | Refractive { reflect_prob } ->
             if Sample.float () < reflect_prob then
               recurse Ray.reflect ray max_depth i

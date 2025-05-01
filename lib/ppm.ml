@@ -1,3 +1,5 @@
+open Math
+
 type rgb = int * int * int
 
 (* data in row major format *)
@@ -21,10 +23,6 @@ let to_string (ppm : t) (_mode : [ `P3 ]) =
   in
   header ^ String.concat "\n" row_strings ^ "\n"
 
-let to_array (ppm : t) =
-  let _ = ppm in
-  failwith "TODO"
-
 let of_render (render : Render.t) =
   let val_of_color color =
     int_of_float
@@ -39,9 +37,57 @@ let of_render (render : Render.t) =
   in
   { width; height; max_color_value = default_max_val; data }
 
-let of_file (filename : string) (_mode : [ `P6 ]) =
-  let _ = filename in
-  failwith "TODO"
+let to_texture (ppm : t) : Texture.t =
+  let calc_value v =
+    let normalized = float_of_int v /. float_of_int ppm.max_color_value in
+    let corrected =
+      Float.pow (clamp 0.0 1.0 normalized) (1.0 /. gamma_correction)
+    in
+    corrected
+  in
+  let rows = ppm.height in
+  let cols = ppm.width in
+  let data = Array.make_matrix rows cols (Vec3.create 0.0 0.0 0.0) in
+  List.iteri
+    (fun i row ->
+      List.iteri
+        (fun j (r, g, b) ->
+          data.(i).(j) <-
+            Vec3.create (calc_value r) (calc_value g) (calc_value b))
+        row)
+    ppm.data;
+  Image (rows, cols, data)
+
+let of_file (filename : string) (_mode : [ `P6 ]) : t =
+  let chan = open_in_bin filename in
+  let read_rgb () =
+    let r = input_byte chan in
+    let g = input_byte chan in
+    let b = input_byte chan in
+    (r, g, b)
+  in
+  let read_to e =
+    let buf = Buffer.create 16 in
+    let rec aux () =
+      let c = input_char chan in
+      if c = e then ()
+      else (
+        Buffer.add_char buf c;
+        aux ())
+    in
+    aux ();
+    Buffer.contents buf
+  in
+  let magic = read_to '\n' in
+  if magic <> "P6" then failwith "Only binary PPM (P6) supported";
+  let width = int_of_string (read_to ' ') in
+  let height = int_of_string (read_to '\n') in
+  let max_color_value = int_of_string (read_to '\n') in
+  let data =
+    List.init height (fun _ -> List.init width (fun _ -> read_rgb ()))
+  in
+  close_in chan;
+  { max_color_value; width; height; data }
 
 let print (ppm : t) = to_string ppm `P3 |> print_string
 

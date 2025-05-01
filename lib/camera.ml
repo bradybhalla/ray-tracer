@@ -28,6 +28,7 @@ let create ?(pos = Vec3.create 0.0 0.0 (-10.0)) ?(look_at = Vec3.zero)
     pixel_height;
   }
 
+(* TODO: can this be removed or merged into something else? *)
 (* dimension of the camera if its origin was a distance of 1 away *)
 let get_virtual_dim camera =
   let width = camera.aspect_ratio *. 2.0 *. tan (camera.fov /. 2.0) in

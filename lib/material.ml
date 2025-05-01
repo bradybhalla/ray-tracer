@@ -24,7 +24,7 @@ let tex_grad nu nv =
   ))
 
 let create = function
-  | `Red -> Diffuse { tex = tex_red; reflect_prob = 0.0 }
+  | `Red -> Diffuse { tex = tex_red; reflect_prob = 0.3 }
   | `Green -> Diffuse { tex = tex_green; reflect_prob = 0.0 }
   | `Blue -> Diffuse { tex = tex_blue; reflect_prob = 0.0 }
   | `White -> Diffuse { tex = tex_white; reflect_prob = 0.0 }
