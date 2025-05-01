@@ -1,5 +1,3 @@
-open Math
-
 type t
 
 val to_string : t -> [ `P3 ] -> string
