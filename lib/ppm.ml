@@ -13,7 +13,7 @@ type t = {
 let default_max_val = 255
 let gamma_correction = 1.0 /. 2.2
 
-let to_string (ppm : t) (_mode : [ `P3 ]) =
+let to_string (ppm : t) (mode : [ `P3 ]) =
   let header =
     Printf.sprintf "P3\n%d %d\n%d\n" ppm.width ppm.height ppm.max_color_value
   in
@@ -58,7 +58,7 @@ let to_texture (ppm : t) : Texture.t =
     ppm.data;
   Image (rows, cols, data)
 
-let of_file (filename : string) (_mode : [ `P6 ]) : t =
+let of_file (filename : string) (mode : [ `P6 ]) : t =
   let chan = open_in_bin filename in
   let read_rgb () =
     let r = input_byte chan in

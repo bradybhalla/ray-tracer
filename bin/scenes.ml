@@ -68,3 +68,20 @@ let space_scene pixel_height t =
         light_at (Vec3.create 30.0 (-20.0) 0.0) 1000.0;
       ];
   }
+
+let obj_scene pixel_height t =
+  let t = t *. 2.0 *. Float.pi in
+  let triangles = Mesh.of_file "objects/test_part.obj" |> Mesh.to_shapes in
+  {
+    camera =
+      Camera.create
+        ~pos:(Vec3.create (-10.0 *. sin t) (-2.0) (-10.0 *. cos t))
+        ~pixel_height ();
+    primitives =
+      List.map
+        (fun t ->
+          Primitive.
+            { shape = t; material = mc `Blue; medium = Medium.default_spec })
+        triangles;
+    lights = [ light_at (Vec3.create (-30.0) (-20.0) 0.0) 600.0 ];
+  }

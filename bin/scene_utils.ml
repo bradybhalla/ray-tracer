@@ -47,7 +47,7 @@ let sphere_at v r mat : Primitive.t =
     material;
     medium =
       (match material with
-      | Refractive _ -> { inside = 1.5; outside = 1.0 }
+      | Refractive _ -> { inside = 1.5; outside = Medium.default }
       | _ -> Medium.default_spec);
   }
 

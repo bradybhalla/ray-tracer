@@ -3,3 +3,8 @@
 (library
  (name ray_tracer)
  (public_name ray_tracer))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
