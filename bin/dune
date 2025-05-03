@@ -5,3 +5,8 @@
 (executable
  (name animation)
  (libraries ray_tracer))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))

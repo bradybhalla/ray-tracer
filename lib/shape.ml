@@ -16,7 +16,7 @@ module Sphere : ShapeInterface with type t = sphere = struct
     let offset = Vec3.normalize (point -@ pos) in
     let u = (offset.y *. 0.5) +. 0.5 in
     let v = (atan2 offset.x offset.z /. (2.0 *. Float.pi)) +. 0.5 in
-    { u ; v }
+    { u; v }
 
   let intersect_times { pos; radius } (ray : Ray.t) =
     let a = Vec3.dot ray.dir ray.dir in
@@ -81,16 +81,74 @@ module Plane : ShapeInterface with type t = plane = struct
                 (let u_dir = Vec3.cross xdir normal |> Vec3.normalize in
                  let v_dir = Vec3.cross normal u_dir |> Vec3.normalize in
                  let proj_pos = Ray.at ray t -@ pos in
-                 { u = Vec3.dot proj_pos u_dir |> decimal; v = Vec3.dot proj_pos v_dir |> decimal });
+                 {
+                   u = Vec3.dot proj_pos u_dir |> decimal;
+                   v = Vec3.dot proj_pos v_dir |> decimal;
+                 });
               medium_transition = Out2Out;
             } )
 end
 
-type t = Sphere of Sphere.t | Plane of Plane.t
+type triangle = { p0 : Vec3.t; p1 : Vec3.t; p2 : Vec3.t }
+
+module Triangle : ShapeInterface with type t = triangle = struct
+  type t = triangle
+
+  (* TODO: probably inefficient for now *)
+  let get_bary { p0 = a; p1 = b; p2 = c } p =
+    let v0 = b -@ a in
+    let v1 = c -@ a in
+    let v2 = p -@ a in
+    let d00 = Vec3.dot v0 v0 in
+    let d01 = Vec3.dot v0 v1 in
+    let d11 = Vec3.dot v1 v1 in
+    let d20 = Vec3.dot v2 v0 in
+    let d21 = Vec3.dot v2 v1 in
+    let denom = (d00 *. d11) -. (d01 *. d01) in
+    let v = ((d11 *. d20) -. (d01 *. d21)) /. denom in
+    let w = ((d00 *. d21) -. (d01 *. d20)) /. denom in
+    (v, w, 1.0 -. v -. w)
+
+  (* TODO: probably inefficient for now *)
+  let intersect triangle (ray : Ray.t) =
+    let { p0; p1; p2 } = triangle in
+    let normal = Vec3.cross (p1 -@ p0) (p2 -@ p0) |> Vec3.normalize in
+    let pos = p0 in
+    let num = Vec3.dot (pos -@ ray.origin) normal in
+    let denom = Vec3.dot ray.dir normal in
+    if denom = 0.0 then
+      (* ray parallel to plane of triangle *)
+      None
+    else
+      let t = num /. denom in
+      if t < 0.0 then
+        (* intersection is negative *)
+        None
+      else
+        let intersect_point = Ray.at ray t in
+        let outward_normal =
+          if Vec3.dot ray.dir normal > 0.0 then normal *@ -1.0 else normal
+        in
+        let c0, c1, c2 = get_bary triangle intersect_point in
+        if c0 < 0.0 || c0 > 1.0 || c1 < 0.0 || c1 > 1.0 || c2 < 0.0 || c2 > 1.0
+        then None
+        else
+          Some
+            ( t,
+              {
+                point = intersect_point;
+                normal = outward_normal;
+                tex_coord = { u = 0.0; v = 0.0 };
+                medium_transition = Out2Out;
+              } )
+end
+
+type t = Sphere of Sphere.t | Plane of Plane.t | Triangle of Triangle.t
 
 let intersect v ray =
   match v with
   | Sphere v -> Sphere.intersect v ray
   | Plane v -> Plane.intersect v ray
+  | Triangle v -> Triangle.intersect v ray
 
 (* TODO: make "create" function so t doesn't need to be exposed *)

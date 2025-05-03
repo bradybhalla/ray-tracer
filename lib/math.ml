@@ -73,5 +73,4 @@ let solve_quadratic a b c =
     Some (t1, t2)
 
 let clamp minv maxv v = v |> min maxv |> max minv
-
 let decimal v = v -. floor v

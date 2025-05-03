@@ -20,6 +20,7 @@ let cmp v v' =
   | v, None -> v
   | Some (t, i), Some (t', i') -> if t < t' then Some (t, i) else Some (t', i')
 
+(* TODO: this should be in an aggregate class *)
 let get_first_intersection (prims : t list) (ray : Ray.t) =
   prims
   |> List.map (fun p -> Shape.intersect p.shape ray >>= get_intersection p)

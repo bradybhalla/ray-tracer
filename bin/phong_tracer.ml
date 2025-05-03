@@ -27,7 +27,8 @@ let phong (scene : Render.scene) (ray : Ray.t) =
         let ambient = color /@ 10.0 in
         let specular = Vec3.create 0.1 0.1 0.1 in
         let shininess = 10.0 in
-        if is_shadowed int light then ambient *@ (power /. light_dist /. light_dist)
+        if is_shadowed int light then
+          ambient *@ (power /. light_dist /. light_dist)
         else
           let diffuse =
             color *@ Vec3.dot int.si.normal light_dir |> Vec3.max 0.0

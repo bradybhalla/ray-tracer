@@ -10,5 +10,4 @@ val get_pixel_dim : t -> [ `Col of int ] * [ `Row of int ]
 (** Get the pixel dimensions of the camera. *)
 
 val get_ray : t -> [ `Col of int ] -> [ `Row of int ] -> Ray.t
-(** Calculate the ray corresponding to a specific pixel of
-    the camera. *)
+(** Calculate the ray corresponding to a specific pixel of the camera. *)
