@@ -58,11 +58,11 @@ let of_file (filename : string) =
 
 let to_shapes (mesh : t) : Shape.t list =
   let face_to_triangle ((f0, f1, f2) : f) =
-    Shape.Triangle
+    Shape.create (TriangleParams
       {
         p0 = mesh.vertices.(f0.vi - 1) *@ 100.0; (* TODO: my onshape files are in meters *)
         p1 = mesh.vertices.(f1.vi - 1) *@ 100.0;
         p2 = mesh.vertices.(f2.vi - 1) *@ 100.0;
-      }
+      })
   in
   List.map face_to_triangle mesh.faces

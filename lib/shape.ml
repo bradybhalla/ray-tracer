@@ -3,22 +3,43 @@ open Utils
 
 module type ShapeInterface = sig
   type t
+  type params
 
+  val create : params -> t
   val intersect : t -> Ray.t -> (float * shape_intersection) option
+  val transform : t -> Transform.t -> t
 end
 
-type sphere = { pos : Vec3.t; radius : float }
+type sphere_params = { pos : Vec3.t; radius : float }
 
-module Sphere : ShapeInterface with type t = sphere = struct
-  type t = sphere
+module Sphere : ShapeInterface with type params = sphere_params = struct
+  (* NOTE: if sphere doesn't store the transforms, it is hard to
+         calculate the result of scaling it. Maybe this could be
+         done more efficiently with more effort. *)
+  type t = {
+    pos : Vec3.t;
+    radius : float;
+    transform : Transform.t;
+    inv_transform : Transform.t;
+  }
 
-  let tex_coord_of_point { pos; _ } point : Texture.tex_coord =
+  type params = sphere_params
+
+  let create ({ pos; radius } : params) =
+    {
+      pos;
+      radius;
+      transform = Transform.identity;
+      inv_transform = Transform.identity;
+    }
+
+  let tex_coord_of_point ({ pos; _ } : t) point : Texture.tex_coord =
     let offset = Vec3.normalize (point -@ pos) in
     let u = (offset.y *. 0.5) +. 0.5 in
     let v = (atan2 offset.x offset.z /. (2.0 *. Float.pi)) +. 0.5 in
     { u; v }
 
-  let intersect_times { pos; radius } (ray : Ray.t) =
+  let intersect_times ({ pos; radius; _ } : t) (ray : Ray.t) =
     let a = Vec3.dot ray.dir ray.dir in
     let b = -2.0 *. Vec3.dot ray.dir (pos -@ ray.origin) in
     let c =
@@ -26,7 +47,7 @@ module Sphere : ShapeInterface with type t = sphere = struct
     in
     solve_quadratic a b c
 
-  let intersection_of_times s ray (t1, t2) =
+  let intersection_of_times (s : t) ray (t1, t2) =
     if t2 < 0.0 then
       (* both intersections are negative *)
       None
@@ -51,15 +72,60 @@ module Sphere : ShapeInterface with type t = sphere = struct
             medium_transition = In2Out;
           } )
 
-  let intersect s ray = intersect_times s ray >>= intersection_of_times s ray
+  let transform_intersection tr (t, si) =
+    Some (t, Transform.shape_intersection tr si)
+
+  let intersect (s : t) ray =
+    (* ray into sphere coords *)
+    let ray = Transform.ray s.inv_transform ray in
+    (* find points of intersection *)
+    intersect_times s ray
+    (* calculate intersection props *)
+    >>= intersection_of_times s ray
+    (* intersection back to world coords *)
+    >>= transform_intersection s.transform
+
+  let transform s tr =
+    let transform = Transform.compose s.transform tr in
+    let inv_transform = Transform.inv transform in
+    { s with transform; inv_transform }
 end
 
-type plane = { normal : Vec3.t; pos : Vec3.t; xdir : Vec3.t }
+type plane_params = { normal : Vec3.t; pos : Vec3.t }
 
-module Plane : ShapeInterface with type t = plane = struct
-  type t = plane
+module Plane : ShapeInterface with type params = plane_params = struct
+  type t = { normal : Vec3.t; pos : Vec3.t; udir : Vec3.t; vdir : Vec3.t }
+  type params = plane_params
 
-  let intersect { normal; pos; xdir } (ray : Ray.t) =
+  let transform (plane : t) tr =
+    {
+      normal = Transform.normal tr plane.normal;
+      pos = Transform.point tr plane.pos;
+      udir = Transform.vec tr plane.udir;
+      vdir = Transform.vec tr plane.vdir;
+    }
+
+  let create ({ normal; pos } : params) =
+    let default_normal = Vec3.create 0.0 (-1.0) 0.0 in
+    let default_u = Vec3.create 1.0 0.0 0.0 in
+    let default_v = Vec3.create 0.0 0.0 (-1.0) in
+    let cross = Vec3.cross default_normal normal in
+    let mag = Vec3.mag cross in
+    let default =
+      {
+        normal = default_normal;
+        pos = Vec3.zero;
+        udir = default_u;
+        vdir = default_v;
+      }
+    in
+    let tr : Transform.t =
+      if mag = 0.0 then [ Translation pos ]
+      else [ Rotation (Vec3.normalize cross, asin mag); Translation pos ]
+    in
+    transform default tr
+
+  let intersect { normal; pos; udir; vdir } (ray : Ray.t) =
     let num = Vec3.dot (pos -@ ray.origin) normal in
     let denom = Vec3.dot ray.dir normal in
     if denom = 0.0 then
@@ -78,21 +144,22 @@ module Plane : ShapeInterface with type t = plane = struct
               point = Ray.at ray t;
               normal = (if not flip_normal then normal else normal *@ -1.0);
               tex_coord =
-                (let u_dir = Vec3.cross xdir normal |> Vec3.normalize in
-                 let v_dir = Vec3.cross normal u_dir |> Vec3.normalize in
-                 let proj_pos = Ray.at ray t -@ pos in
+                (let proj_pos = Ray.at ray t -@ pos in
                  {
-                   u = Vec3.dot proj_pos u_dir |> decimal;
-                   v = Vec3.dot proj_pos v_dir |> decimal;
+                   u = Vec3.dot proj_pos udir |> decimal;
+                   v = Vec3.dot proj_pos vdir |> decimal;
                  });
               medium_transition = Out2Out;
             } )
 end
 
-type triangle = { p0 : Vec3.t; p1 : Vec3.t; p2 : Vec3.t }
+type triangle_params = { p0 : Vec3.t; p1 : Vec3.t; p2 : Vec3.t }
 
-module Triangle : ShapeInterface with type t = triangle = struct
-  type t = triangle
+module Triangle : ShapeInterface with type params = triangle_params = struct
+  type t = triangle_params
+  type params = triangle_params
+
+  let create triangle = triangle
 
   (* TODO: probably inefficient for now *)
   let get_bary { p0 = a; p1 = b; p2 = c } p =
@@ -141,14 +208,38 @@ module Triangle : ShapeInterface with type t = triangle = struct
                 tex_coord = { u = 0.0; v = 0.0 };
                 medium_transition = Out2Out;
               } )
+
+  let transform triangle tr =
+    {
+      p0 = Transform.point tr triangle.p0;
+      p1 = Transform.point tr triangle.p1;
+      p2 = Transform.point tr triangle.p2;
+    }
 end
 
 type t = Sphere of Sphere.t | Plane of Plane.t | Triangle of Triangle.t
 
-let intersect v ray =
+type params =
+  | SphereParams of Sphere.params
+  | PlaneParams of Plane.params
+  | TriangleParams of Triangle.params
+
+let create (p : params) =
+  match p with
+  | SphereParams p -> Sphere (Sphere.create p)
+  | PlaneParams p -> Plane (Plane.create p)
+  | TriangleParams p -> Triangle (Triangle.create p)
+
+let intersect (v : t) ray =
   match v with
   | Sphere v -> Sphere.intersect v ray
   | Plane v -> Plane.intersect v ray
   | Triangle v -> Triangle.intersect v ray
+
+let transform (v : t) (tr : Transform.t) : t =
+  match v with
+  | Sphere v -> Sphere (Sphere.transform v tr)
+  | Plane v -> Plane (Plane.transform v tr)
+  | Triangle v -> Triangle (Triangle.transform v tr)
 
 (* TODO: make "create" function so t doesn't need to be exposed *)

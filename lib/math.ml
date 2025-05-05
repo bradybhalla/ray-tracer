@@ -4,14 +4,12 @@ module Vec3 = struct
   let zero = { x = 0.0; y = 0.0; z = 0.0 }
   let create x y z = { x; y; z }
   let dot v1 v2 = (v1.x *. v2.x) +. (v1.y *. v2.y) +. (v1.z *. v2.z)
-  let cwise f v = { x = f v.x; y = f v.y; z = f v.z }
-  let bin f u v = { x = f u.x v.x; y = f u.y v.y; z = f u.z v.z }
-  let add = bin ( +. )
-  let sub = bin ( -. )
-  let cmul v k = cwise (fun x -> x *. k) v
-  let cdiv v k = cwise (fun x -> x /. k) v
-  let min m = cwise (min m)
-  let max m = cwise (max m)
+  let add v1 v2 = { x = v1.x +. v2.x; y = v1.y +. v2.y; z = v1.z +. v2.z }
+  let sub v1 v2 = { x = v1.x -. v2.x; y = v1.y -. v2.y; z = v1.z -. v2.z }
+  let cmul v k = { x = v.x *. k; y = v.y *. k; z = v.z *. k }
+  let cdiv v k = { x = v.x /. k; y = v.y /. k; z = v.z /. k }
+  let min m v = { x = min m v.x; y = min m v.y; z = min m v.z }
+  let max m v = { x = max m v.x; y = max m v.y; z = max m v.z }
   let mag v = sqrt (dot v v)
   let mag_sq v = dot v v
 

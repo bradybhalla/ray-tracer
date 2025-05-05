@@ -43,7 +43,7 @@ let mc =
 let sphere_at v r mat : Primitive.t =
   let material = mc mat in
   {
-    shape = Sphere { pos = v; radius = r };
+    shape = Shape.create (SphereParams { pos = v; radius = r });
     material;
     medium =
       (match material with
@@ -54,19 +54,12 @@ let sphere_at v r mat : Primitive.t =
 let sphere_on_y1 x z mat r : Primitive.t =
   sphere_at (Vec3.create x (1.0 -. r) z) r mat
 
-let ground mat y dir_t : Primitive.t =
+let ground mat y : Primitive.t =
   {
     shape =
-      Plane
-        {
-          normal = Vec3.create 0.0 (-1.0) 0.0;
-          pos = Vec3.create 0.0 y 0.0;
-          xdir =
-            Vec3.create
-              (cos (1.0 *. Float.pi *. dir_t))
-              0.0
-              (sin (1.0 *. Float.pi *. dir_t));
-        };
+      Shape.create
+        (PlaneParams
+           { normal = Vec3.create 0.0 (-1.0) 0.0; pos = Vec3.create 0.0 y 0.0 });
     material = mc mat;
     medium = Medium.default_spec;
   }
@@ -74,12 +67,7 @@ let ground mat y dir_t : Primitive.t =
 let wall_facing_origin (pos : Vec3.t) mat : Primitive.t =
   {
     shape =
-      Plane
-        {
-          normal = Vec3.normalize (pos *@ -1.0);
-          pos;
-          xdir = Vec3.create 1.0 0.0 0.0;
-        };
+      Shape.create (PlaneParams { normal = Vec3.normalize (pos *@ -1.0); pos });
     material = mc mat;
     medium = Medium.default_spec;
   }

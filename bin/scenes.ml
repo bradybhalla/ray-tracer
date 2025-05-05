@@ -1,6 +1,7 @@
 open Ray_tracer
 open Ray_tracer.Math
 open Ray_tracer.Render
+open Ray_tracer.Transform
 open Scene_utils
 
 let spheres_scene pixel_height t =
@@ -11,7 +12,7 @@ let spheres_scene pixel_height t =
         sphere_on_y1 (-2.0) 0.0 `Red 1.0;
         sphere_on_y1 2.0 0.0 `Glass 1.0;
         sphere_on_y1 0.0 0.0 (`Gradient (9, 22)) 1.0;
-        ground `Mirror 1.0 t;
+        ground `Mirror 1.0;
       ];
     lights = [ light_at (Vec3.create (-10.0) (-30.0) (-30.0)) 2000.0 ];
   }
@@ -51,16 +52,17 @@ let space_scene pixel_height t =
         sphere_at (Vec3.create 3.0 0.0 0.0) 3.0 `Earth;
         {
           shape =
-            Triangle
-              {
-                p0 = Vec3.create (-5.0) (-5.0) (-5.0);
-                p1 = Vec3.create (-5.0) 5.0 (-5.0);
-                p2 = Vec3.create (-5.0) (-5.0) 5.0;
-              };
+            Shape.create
+              (TriangleParams
+                 {
+                   p0 = Vec3.create (-5.0) (-5.0) (-5.0);
+                   p1 = Vec3.create (-5.0) 5.0 (-5.0);
+                   p2 = Vec3.create (-5.0) (-5.0) 5.0;
+                 });
           material = mc `Mirror;
           medium = Medium.default_spec;
         };
-        ground `Blue 4.0 0.0;
+        ground `Blue 4.0;
       ];
     lights =
       [
@@ -69,19 +71,24 @@ let space_scene pixel_height t =
       ];
   }
 
-let obj_scene pixel_height t =
-  let t = t *. 2.0 *. Float.pi in
+let obj_scene pixel_height =
   let triangles = Mesh.of_file "objects/test_part.obj" |> Mesh.to_shapes in
+  fun t -> (
+  let t = t *. 2.0 *. Float.pi in
+  let rot = Transform.Rotation ((Vec3.create 0.0 (-1.0) 0.0), t) in
+  let scale = Transform.Scale (Vec3.create 1.0 1.0 1.0 /@ (1.0 +. sin (0.5 *. t) *. sin (0.5 *. t))) in
   {
     camera =
-      Camera.create
-        ~pos:(Vec3.create (-10.0 *. sin t) (-2.0) (-10.0 *. cos t))
-        ~pixel_height ();
+      Camera.create ~pos:(Vec3.create 0.0 (-2.0) (-10.0)) ~pixel_height ();
     primitives =
       List.map
-        (fun t ->
+        (fun triangle ->
           Primitive.
-            { shape = t; material = mc `Blue; medium = Medium.default_spec })
+            {
+              shape = Shape.transform triangle [scale; rot];
+              material = mc `Blue;
+              medium = Medium.default_spec;
+            })
         triangles;
     lights = [ light_at (Vec3.create (-30.0) (-20.0) 0.0) 600.0 ];
-  }
+  })
