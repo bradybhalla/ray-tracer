@@ -21,6 +21,12 @@ clean:
 	rm -f tmp.ppm
 	rm -rf animation
 	rm -f tmp.mp4
+	rm -rf *.trace
 
+# only works for MacOS
+profile:
+	$(DUNE) build
+	xctrace record --output . --template "Time Profiler" \
+		--target-stdout - --launch -- ./_build/default/bin/single_render.exe
 
 .PHONY: render animation build clean

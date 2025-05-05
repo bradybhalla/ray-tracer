@@ -68,9 +68,8 @@ let normal (tr : t) (vec : Vec3.t) : Vec3.t =
   List.fold_left single_inv_transpose_transform_vec vec tr |> Vec3.normalize
 
 let ray (transform : t) (ray : Ray.t) : Ray.t =
-  let inv_transform = inv transform in
-  let origin = point inv_transform ray.origin in
-  let dir = vec inv_transform ray.dir in
+  let origin = point transform ray.origin in
+  let dir = vec transform ray.dir in
   { origin; dir }
 
 let shape_intersection transform (si : shape_intersection) =

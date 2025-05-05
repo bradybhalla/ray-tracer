@@ -3,15 +3,15 @@ open Phong_tracer
 
 (* let create_scene = Scenes.space_scene 300 *)
 (* let create_scene = Scenes.room_scene 300 *)
-(* let create_scene = Scenes.spheres_scene 300 *)
-let create_scene = Scenes.obj_scene 150
+let create_scene = Scenes.spheres_scene 400
+(* let create_scene = Scenes.obj_scene 150 *)
 
 let render n i =
   Printf.printf "Processing frame %d/%d" (i + 1) n;
   print_newline ();
   Render.create
     ~scene:(create_scene (float_of_int i /. float_of_int n))
-    ~params:{ samples_per_pixel = 1 } ~tracer:phong
+    ~params:{ samples_per_pixel = 10 } ~tracer:phong
   |> Ppm.of_render
 
 let () =

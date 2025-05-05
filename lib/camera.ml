@@ -28,13 +28,6 @@ let create ?(pos = Vec3.create 0.0 0.0 (-10.0)) ?(look_at = Vec3.zero)
     pixel_height;
   }
 
-(* TODO: can this be removed or merged into something else? *)
-(* dimension of the camera if its origin was a distance of 1 away *)
-let get_virtual_dim camera =
-  let width = camera.aspect_ratio *. 2.0 *. tan (camera.fov /. 2.0) in
-  let height = 2.0 *. tan (camera.fov /. 2.0) in
-  (`Width width, `Height height)
-
 (* pixel dimension of the camera *)
 let get_pixel_dim camera =
   let cols =
@@ -44,16 +37,19 @@ let get_pixel_dim camera =
   (`Col cols, `Row rows)
 
 let get_ray camera (`Col c) (`Row r) : Ray.t =
-  let `Width width, `Height height = get_virtual_dim camera in
+  (* dimension of the camera in scene coords if its origin was a distance of 1 away *)
+  let virtual_width = camera.aspect_ratio *. 2.0 *. tan (camera.fov /. 2.0) in
+  let virtual_height = 2.0 *. tan (camera.fov /. 2.0) in
+  (* dimension of the output image in pixels *)
   let `Col cols, `Row rows = get_pixel_dim camera in
   let jitter () = if camera.pixel_jitter then Random.float 1.0 else 0.5 in
   let x =
-    ((float_of_int c +. jitter ()) /. float_of_int cols *. width)
-    -. (width /. 2.0)
+    ((float_of_int c +. jitter ()) /. float_of_int cols *. virtual_width)
+    -. (virtual_width /. 2.0)
   in
   let y =
-    ((float_of_int r +. jitter ()) /. float_of_int rows *. height)
-    -. (height /. 2.0)
+    ((float_of_int r +. jitter ()) /. float_of_int rows *. virtual_height)
+    -. (virtual_height /. 2.0)
   in
   let dir = (camera.ex *@ x) +@ (camera.ey *@ y) +@ camera.ez in
   let origin = camera.pos in
