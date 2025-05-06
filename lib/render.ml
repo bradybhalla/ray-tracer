@@ -20,39 +20,36 @@ type t = { data : pixel_info array array; width : int; height : int }
 
 let get_dim (render : t) = (`Col render.width, `Row render.height)
 
-let update_with_sample row_data (`Col x) (c : Vec3.t) =
-  let { weighted_color_sum; sum_weights } = row_data.(x) in
+let update_with_sample data (`Col x) (`Row y) (c : Vec3.t) =
+  let { weighted_color_sum; sum_weights } = data.(y).(x) in
   let new_info =
     {
       weighted_color_sum = weighted_color_sum +@ c;
       sum_weights = sum_weights +. 1.0;
     }
   in
-  row_data.(x) <- new_info
+  data.(y).(x) <- new_info
 
-let render_row scene params tracer row_data row_index =
-  prerr_string "Rendering row\n";
-  prerr_newline ();
-  for x = 0 to Array.length row_data - 1 do
-    for _ = 1 to params.samples_per_pixel do
-      let ray = Camera.get_ray scene.camera (`Col x) (`Row row_index) in
-      let color = tracer scene ray in
-      update_with_sample row_data (`Col x) color
-    done
-  done
-
+(* TODO: probably setup and teardown pool in main function instead of here *)
 let create ~(scene : scene) ~(params : params) ~(tracer : tracer) : t =
   let `Col width, `Row height = Camera.get_pixel_dim scene.camera in
   let data =
     Array.make_matrix height width
       { weighted_color_sum = Vec3.zero; sum_weights = 0.0 }
   in
+  (* TODO: this parallelism won't get faster until fewer GC calls are needed *)
   let pool = T.setup_pool ~num_domains:4 () in
+  let loop_size = height * width * params.samples_per_pixel in
   T.run pool (fun _ ->
-      T.parallel_for ~start:0 ~finish:(height - 1)
-        ~body:(fun r -> render_row scene params tracer data.(r) r)
-        pool);
+      T.parallel_for pool ~start:0 ~finish:(loop_size - 1) ~body:(fun i ->
+          let grid_i = i / params.samples_per_pixel in
+          let x = grid_i mod width in
+          let y = grid_i / width in
+          let ray = Camera.get_ray scene.camera (`Col x) (`Row y) in
+          let color = tracer scene ray in
+          update_with_sample data (`Col x) (`Row y) color));
   T.teardown_pool pool;
+  Gc.print_stat stderr;
   { data; width; height }
 
 let get_pixel_color (render : t) (`Col x) (`Row y) : Vec3.t =
