@@ -7,7 +7,3 @@
 ## Requirements
 - `dune`
 - `ffmpeg` (only used to create video from animation frames)
-
-## TODOs
-- [ ] change polymorphic variants to named args
-- [ ] write benchmarking tests
