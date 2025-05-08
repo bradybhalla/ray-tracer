@@ -29,4 +29,4 @@ profile:
 	xctrace record --output . --template "Time Profiler" \
 		--target-stdout - --launch -- ./_build/default/bin/single_render.exe
 
-.PHONY: render animation build clean
+.PHONY: build render animation clean profile

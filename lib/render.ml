@@ -37,7 +37,7 @@ let create ~(scene : scene) ~(params : params) ~(tracer : tracer) : t =
     Array.make_matrix height width
       { weighted_color_sum = Vec3.zero; sum_weights = 0.0 }
   in
-  (* TODO: this parallelism won't get faster until fewer GC calls are needed *)
+  (* TODO: this parallelism won't get faster until fewer GC calls are needed? *)
   let pool = T.setup_pool ~num_domains:4 () in
   let loop_size = height * width * params.samples_per_pixel in
   T.run pool (fun _ ->

@@ -39,7 +39,8 @@ let mc =
   | `Glass -> Refractive { reflect_prob = 0.0 }
   | `Earth -> Diffuse { tex = tex_earth; reflect_prob = 0.0 }
 
-let ( % ) (prim: Primitive.t) tr = { prim with shape = Shape.transform prim.shape tr }
+let ( % ) (prim : Primitive.t) tr =
+  { prim with shape = Shape.transform prim.shape tr }
 
 (* build primitives *)
 let sphere_at v r mat : Primitive.t =

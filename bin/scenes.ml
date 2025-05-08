@@ -105,8 +105,5 @@ let obj_scene pixel_height =
                 Translation (Vec3.create 0.0 7.0 0.0);
               ];
           ];
-      lights =
-        [
-          light_at (Vec3.create (-18.0) (-10.0) (-20.0)) 500.0;
-        ];
+      lights = [ light_at (Vec3.create (-18.0) (-10.0) (-20.0)) 500.0 ];
     }
