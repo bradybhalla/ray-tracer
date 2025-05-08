@@ -23,9 +23,8 @@ clean:
 	rm -f tmp.mp4
 	rm -rf *.trace
 
-# only works for MacOS
-profile:
-	$(DUNE) build
+# only works for macOS
+profile: build
 	xctrace record --output . --template "Time Profiler" \
 		--target-stdout - --launch -- ./_build/default/bin/single_render.exe
 
