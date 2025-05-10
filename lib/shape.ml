@@ -34,17 +34,18 @@ module Sphere : ShapeInterface with type params = sphere_params = struct
     }
 
   let tex_coord_of_point ({ pos; _ } : t) point : Texture.tex_coord =
-    let offset = Vec3.normalize (point -@ pos) in
-    let u = (offset.y *. 0.5) +. 0.5 in
-    let v = (atan2 offset.x offset.z /. (2.0 *. Float.pi)) +. 0.5 in
+    let offset = Vec3.copy point |> Vec3.sub pos |> Vec3.normalize in
+    let u = (Vec3.y offset *. 0.5) +. 0.5 in
+    let v =
+      (atan2 (Vec3.x offset) (Vec3.z offset) /. (2.0 *. Float.pi)) +. 0.5
+    in
     { u; v }
 
   let intersect_times ({ pos; radius; _ } : t) (ray : Ray.t) =
+    let diff = Vec3.copy pos |> Vec3.sub ray.origin in
     let a = Vec3.dot ray.dir ray.dir in
-    let b = -2.0 *. Vec3.dot ray.dir (pos -@ ray.origin) in
-    let c =
-      Vec3.dot (pos -@ ray.origin) (pos -@ ray.origin) -. (radius *. radius)
-    in
+    let b = -2.0 *. Vec3.dot ray.dir diff in
+    let c = Vec3.mag_sq diff -. (radius *. radius) in
     solve_quadratic a b c
 
   let intersection_of_times (s : t) ray (t1, t2) =
@@ -53,23 +54,25 @@ module Sphere : ShapeInterface with type params = sphere_params = struct
       None
     else if t1 > 0.0 then
       (* both are positive (t1 is the min) *)
+      let point = Ray.at ray t1 in
       Some
         ( t1,
           {
-            point = Ray.at ray t1;
-            normal = Ray.at ray t1 -@ s.pos |> Vec3.normalize;
-            tex_coord = tex_coord_of_point s (Ray.at ray t1);
-            medium_transition = Out2In;
+            point;
+            normal = Vec3.copy point |> Vec3.sub s.pos |> Vec3.normalize;
+            tex_coord = tex_coord_of_point s point;
+            medium_transition_dir = Out2In;
           } )
     else
       (* inside sphere (t2 is min positive), flip normal *)
+      let point = Ray.at ray t2 in
       Some
         ( t2,
           {
-            point = Ray.at ray t2;
-            normal = s.pos -@ Ray.at ray t2 |> Vec3.normalize;
-            tex_coord = tex_coord_of_point s (Ray.at ray t2);
-            medium_transition = In2Out;
+            point;
+            normal = Vec3.copy s.pos |> Vec3.sub point |> Vec3.normalize;
+            tex_coord = tex_coord_of_point s point;
+            medium_transition_dir = In2Out;
           } )
 
   let transform_intersection tr (t, si) =
@@ -109,12 +112,12 @@ module Plane : ShapeInterface with type params = plane_params = struct
     let default_normal = Vec3.create 0.0 (-1.0) 0.0 in
     let default_u = Vec3.create 1.0 0.0 0.0 in
     let default_v = Vec3.create 0.0 0.0 (-1.0) in
-    let cross = Vec3.cross default_normal normal in
+    let cross = Vec3.cross' default_normal normal in
     let mag = Vec3.mag cross in
     let default =
       {
         normal = default_normal;
-        pos = Vec3.zero;
+        pos = Vec3.zero ();
         udir = default_u;
         vdir = default_v;
       }
@@ -126,7 +129,7 @@ module Plane : ShapeInterface with type params = plane_params = struct
     transform default tr
 
   let intersect { normal; pos; udir; vdir } (ray : Ray.t) =
-    let num = Vec3.dot (pos -@ ray.origin) normal in
+    let num = Vec3.dot pos normal -. Vec3.dot ray.origin normal in
     let denom = Vec3.dot ray.dir normal in
     if denom = 0.0 then
       (* ray parallel to plane *)
@@ -137,35 +140,52 @@ module Plane : ShapeInterface with type params = plane_params = struct
         (* intersection is negative *)
         None
       else
-        let flip_normal = Vec3.dot ray.dir normal > 0.0 in
+        let flip_normal = denom > 0.0 in
+        let point = Ray.at ray t in
         Some
           ( t,
             {
-              point = Ray.at ray t;
-              normal = (if not flip_normal then normal else normal *@ -1.0);
+              point;
+              normal =
+                (if not flip_normal then normal
+                 else Vec3.copy normal |> Vec3.cmul (-1.0));
               tex_coord =
-                (let proj_pos = Ray.at ray t -@ pos in
+                (let proj_pos = Vec3.copy point |> Vec3.sub pos in
                  {
                    u = Vec3.dot proj_pos udir |> decimal;
                    v = Vec3.dot proj_pos vdir |> decimal;
                  });
-              medium_transition = Out2Out;
+              medium_transition_dir = Out2Out;
             } )
 end
 
 type triangle_params = { p0 : Vec3.t; p1 : Vec3.t; p2 : Vec3.t }
 
 module Triangle : ShapeInterface with type params = triangle_params = struct
-  type t = triangle_params
+  type t = {
+    p0 : Vec3.t;
+    p1 : Vec3.t;
+    p2 : Vec3.t;
+    p1_m_p0 : Vec3.t;
+    p2_m_p0 : Vec3.t;
+  }
+
   type params = triangle_params
 
-  let create triangle = triangle
+  let create (triangle : params) : t =
+    {
+      p0 = triangle.p0;
+      p1 = triangle.p1;
+      p2 = triangle.p2;
+      p1_m_p0 = Vec3.copy triangle.p1 |> Vec3.sub triangle.p0;
+      p2_m_p0 = Vec3.copy triangle.p2 |> Vec3.sub triangle.p0;
+    }
 
   (* TODO: probably inefficient for now *)
-  let get_bary { p0 = a; p1 = b; p2 = c } p =
-    let v0 = b -@ a in
-    let v1 = c -@ a in
-    let v2 = p -@ a in
+  let get_bary p1_m_p0 p2_m_p0 p_m_p0 =
+    let v0 = p1_m_p0 in
+    let v1 = p2_m_p0 in
+    let v2 = p_m_p0 in
     let d00 = Vec3.dot v0 v0 in
     let d01 = Vec3.dot v0 v1 in
     let d11 = Vec3.dot v1 v1 in
@@ -178,10 +198,10 @@ module Triangle : ShapeInterface with type params = triangle_params = struct
 
   (* TODO: probably inefficient for now *)
   let intersect triangle (ray : Ray.t) =
-    let { p0; p1; p2 } = triangle in
-    let normal = Vec3.cross (p1 -@ p0) (p2 -@ p0) |> Vec3.normalize in
+    let { p0; p1_m_p0; p2_m_p0; _ } = triangle in
+    let normal = Vec3.copy p1_m_p0 |> Vec3.cross p2_m_p0 |> Vec3.normalize in
     let pos = p0 in
-    let num = Vec3.dot (pos -@ ray.origin) normal in
+    let num = Vec3.dot pos normal -. Vec3.dot ray.origin normal in
     let denom = Vec3.dot ray.dir normal in
     if denom = 0.0 then
       (* ray parallel to plane of triangle *)
@@ -194,9 +214,13 @@ module Triangle : ShapeInterface with type params = triangle_params = struct
       else
         let intersect_point = Ray.at ray t in
         let outward_normal =
-          if Vec3.dot ray.dir normal > 0.0 then normal *@ -1.0 else normal
+          if Vec3.dot ray.dir normal > 0.0 then
+            Vec3.copy normal |> Vec3.cmul (-1.0)
+          else normal
         in
-        let c0, c1, c2 = get_bary triangle intersect_point in
+        let c0, c1, c2 =
+          get_bary p1_m_p0 p2_m_p0 (Vec3.copy intersect_point |> Vec3.sub p0)
+        in
         if c0 < 0.0 || c0 > 1.0 || c1 < 0.0 || c1 > 1.0 || c2 < 0.0 || c2 > 1.0
         then None
         else
@@ -206,14 +230,19 @@ module Triangle : ShapeInterface with type params = triangle_params = struct
                 point = intersect_point;
                 normal = outward_normal;
                 tex_coord = { u = 0.0; v = 0.0 };
-                medium_transition = Out2Out;
+                medium_transition_dir = Out2Out;
               } )
 
-  let transform triangle tr =
+  let transform (triangle : t) tr =
+    let p0 = Transform.point tr triangle.p0 in
+    let p1 = Transform.point tr triangle.p1 in
+    let p2 = Transform.point tr triangle.p2 in
     {
-      p0 = Transform.point tr triangle.p0;
-      p1 = Transform.point tr triangle.p1;
-      p2 = Transform.point tr triangle.p2;
+      p0;
+      p1;
+      p2;
+      p1_m_p0 = Vec3.copy p1 |> Vec3.sub p0;
+      p2_m_p0 = Vec3.copy p2 |> Vec3.sub p0;
     }
 end
 

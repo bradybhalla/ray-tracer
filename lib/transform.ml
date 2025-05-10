@@ -4,9 +4,9 @@ open Utils
 let rotate_vec axis angle v =
   let s = sin angle in
   let c = cos angle in
-  v
-  +@ (Vec3.cross axis v *@ s)
-  +@ (Vec3.cross axis (Vec3.cross axis v) *@ (1.0 -. c))
+  Vec3.copy v
+  |> Vec3.mul_add (Vec3.cross' axis v) s
+  |> Vec3.mul_add (Vec3.cross' axis (Vec3.cross' axis v)) (1.0 -. c)
 
 type single =
   | Rotation of Vec3.t * float (* axis must be normalized *)
@@ -25,23 +25,27 @@ let identity = []
 let single_transform_point p s =
   match s with
   | Rotation (axis, angle) -> rotate_vec axis angle p
-  | Translation pos -> p +@ pos
+  | Translation pos -> Vec3.copy p |> Vec3.add pos
   | Scale scale ->
-      { x = p.x *. scale.x; y = p.y *. scale.y; z = p.z *. scale.z }
+      Vec3.copy p |> Vec3.mul scale
 
 let single_transform_vec v s =
   match s with
   | Rotation (axis, angle) -> rotate_vec axis angle v
   | Translation _ -> v
-  | Scale scale ->
-      { x = v.x *. scale.x; y = v.y *. scale.y; z = v.z *. scale.z }
+  | Scale scale -> Vec3.copy v |> Vec3.mul scale
 
 let single_inv_transpose_transform_vec v s =
   match s with
   | Rotation (axis, angle) -> rotate_vec axis angle v
   | Translation _ -> v
   | Scale scale ->
-      { x = v.x /. scale.x; y = v.y /. scale.y; z = v.z /. scale.z }
+      Vec3.creater
+        {
+          x = Vec3.x v /. Vec3.x scale;
+          y = Vec3.y v /. Vec3.y scale;
+          z = Vec3.z v /. Vec3.z scale;
+        }
 
 (** [compose fst snd] applies [fst] and then [snd] *)
 let compose : t -> t -> t = ( @ )
@@ -49,8 +53,11 @@ let compose : t -> t -> t = ( @ )
 let inv (tr : t) : t =
   let inv_s = function
     | Rotation (axis, angle) -> Rotation (axis, -.angle)
-    | Translation v -> Translation (v *@ -1.0)
-    | Scale v -> Scale { x = 1.0 /. v.x; y = 1.0 /. v.y; z = 1.0 /. v.z }
+    | Translation v -> Translation (Vec3.copy v |> Vec3.cmul (-1.0))
+    | Scale v ->
+        Scale
+          (Vec3.creater
+             { x = 1.0 /. Vec3.x v; y = 1.0 /. Vec3.y v; z = 1.0 /. Vec3.z v })
   in
   List.fold_left (fun rest s -> inv_s s :: rest) [] tr
 
@@ -77,5 +84,5 @@ let shape_intersection transform (si : shape_intersection) =
     point = point transform si.point;
     normal = normal transform si.normal;
     tex_coord = si.tex_coord;
-    medium_transition = si.medium_transition;
+    medium_transition_dir = si.medium_transition_dir;
   }

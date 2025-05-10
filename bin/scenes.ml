@@ -68,7 +68,7 @@ let space_scene pixel_height t =
                    p2 = Vec3.create (-5.0) (-5.0) 5.0;
                  });
           material = mc `Mirror;
-          medium = Medium.default_spec;
+          medium_transition = Medium.default_transition;
         };
         ground `Blue 4.0;
       ];
@@ -94,7 +94,7 @@ let obj_scene pixel_height =
               {
                 shape = triangle;
                 material = mc `Blue;
-                medium = Medium.default_spec;
+                medium_transition = Medium.default_transition;
               }
             % [ rot ])
           triangles

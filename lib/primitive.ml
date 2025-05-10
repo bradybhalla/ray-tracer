@@ -1,6 +1,10 @@
 open Utils
 
-type t = { shape : Shape.t; material : Material.t; medium : Medium.spec }
+type t = {
+  shape : Shape.t;
+  material : Material.t;
+  medium_transition : Medium.transition;
+}
 
 let get_intersection (prim : t) ((t, si) : float * shape_intersection) :
     (float * intersection) option =
@@ -9,9 +13,10 @@ let get_intersection (prim : t) ((t, si) : float * shape_intersection) :
       {
         si;
         material = prim.material;
-        medium_incident = Medium.get_incident prim.medium si.medium_transition;
+        medium_incident =
+          Medium.get_incident prim.medium_transition si.medium_transition_dir;
         medium_transmitted =
-          Medium.get_transmitted prim.medium si.medium_transition;
+          Medium.get_transmitted prim.medium_transition si.medium_transition_dir;
       } )
 
 let cmp v v' =

@@ -33,7 +33,9 @@ let of_render (render : Render.t) =
     List.init height (fun y ->
         List.init width (fun x ->
             let color = Render.get_pixel_color render (`Col x) (`Row y) in
-            (val_of_color color.x, val_of_color color.y, val_of_color color.z)))
+            ( val_of_color (Vec3.x color),
+              val_of_color (Vec3.y color),
+              val_of_color (Vec3.z color) )))
   in
   { width; height; max_color_value = default_max_val; data }
 
@@ -47,7 +49,7 @@ let to_texture (ppm : t) : Texture.t =
   in
   let rows = ppm.height in
   let cols = ppm.width in
-  let data = Array.make_matrix rows cols (Vec3.create 0.0 0.0 0.0) in
+  let data = Array.make_matrix rows cols (Vec3.zero ()) in
   List.iteri
     (fun i row ->
       List.iteri

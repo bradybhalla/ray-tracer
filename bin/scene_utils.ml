@@ -48,10 +48,10 @@ let sphere_at v r mat : Primitive.t =
   {
     shape = Shape.create (SphereParams { pos = v; radius = r });
     material;
-    medium =
+    medium_transition =
       (match material with
       | Refractive _ -> { inside = 1.5; outside = Medium.default }
-      | _ -> Medium.default_spec);
+      | _ -> Medium.default_transition);
   }
 
 let sphere_on_y1 x z mat r : Primitive.t =
@@ -64,15 +64,17 @@ let ground mat y : Primitive.t =
         (PlaneParams
            { normal = Vec3.create 0.0 (-1.0) 0.0; pos = Vec3.create 0.0 y 0.0 });
     material = mc mat;
-    medium = Medium.default_spec;
+    medium_transition = Medium.default_transition;
   }
 
 let wall_facing_origin (pos : Vec3.t) mat : Primitive.t =
   {
     shape =
-      Shape.create (PlaneParams { normal = Vec3.normalize (pos *@ -1.0); pos });
+      Shape.create
+        (PlaneParams
+           { normal = Vec3.copy pos |> Vec3.cmul (-1.0) |> Vec3.normalize; pos });
     material = mc mat;
-    medium = Medium.default_spec;
+    medium_transition = Medium.default_transition;
   }
 
 let light_at pos power = Light.Point { pos; power }

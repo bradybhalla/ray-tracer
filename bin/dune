@@ -10,3 +10,14 @@
  (dev
   (flags
    (:standard -warn-error -A))))
+
+; (env
+;  (dev
+;   (flags
+;    (:standard -warn-error -A))
+;   (ocamlopt_flags
+;    (:standard -unbox-closures
+;           -inline 1000
+;           -rounds 10
+;           -nodynlink
+;           -O3))))

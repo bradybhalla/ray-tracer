@@ -24,7 +24,7 @@ let update_with_sample data (`Col x) (`Row y) (c : Vec3.t) =
   let { weighted_color_sum; sum_weights } = data.(y).(x) in
   let new_info =
     {
-      weighted_color_sum = weighted_color_sum +@ c;
+      weighted_color_sum = Vec3.copy weighted_color_sum |> Vec3.add c;
       sum_weights = sum_weights +. 1.0;
     }
   in
@@ -35,9 +35,8 @@ let create ~(scene : scene) ~(params : params) ~(tracer : tracer) : t =
   let `Col width, `Row height = Camera.get_pixel_dim scene.camera in
   let data =
     Array.make_matrix height width
-      { weighted_color_sum = Vec3.zero; sum_weights = 0.0 }
+      { weighted_color_sum = Vec3.zero (); sum_weights = 0.0 }
   in
-  (* TODO: this parallelism won't get faster until fewer GC calls are needed? *)
   let pool = T.setup_pool ~num_domains:4 () in
   let loop_size = height * width * params.samples_per_pixel in
   T.run pool (fun _ ->

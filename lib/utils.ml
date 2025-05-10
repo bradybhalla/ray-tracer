@@ -8,7 +8,7 @@ type shape_intersection = {
   point : Vec3.t;
   normal : Vec3.t;
   tex_coord : Texture.tex_coord;
-  medium_transition : Medium.transition;
+  medium_transition_dir : Medium.direction;
 }
 
 type intersection = {
@@ -23,19 +23,19 @@ module Ray = struct
 
   let create ~origin ~dir = { origin; dir }
   let normalize ray = { ray with dir = Vec3.normalize ray.dir }
-  let at ray time = ray.origin +@ (ray.dir *@ time)
+  let at ray time = Vec3.copy ray.origin |> Vec3.mul_add ray.dir time
 
   let reflect (ray : t) (i : intersection) =
     {
-      origin = i.si.point +@ (i.si.normal *@ 0.001);
-      dir = Vec3.reflect ray.dir i.si.normal;
+      origin = Vec3.copy i.si.point |> Vec3.mul_add i.si.normal 0.001;
+      dir = Vec3.reflect' ray.dir i.si.normal;
     }
 
   let refract (ray : t) (i : intersection) =
     {
-      origin = i.si.point +@ (i.si.normal *@ -0.001);
+      origin = Vec3.copy i.si.point |> Vec3.mul_add i.si.normal (-0.001);
       dir =
-        Vec3.refract ray.dir i.si.normal
+        Vec3.refract' ray.dir i.si.normal
           (i.medium_incident /. i.medium_transmitted);
     }
 end

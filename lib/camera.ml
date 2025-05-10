@@ -12,11 +12,11 @@ type t = {
   pixel_height : int;
 }
 
-let create ?(pos = Vec3.create 0.0 0.0 (-10.0)) ?(look_at = Vec3.zero)
+let create ?(pos = Vec3.create 0.0 0.0 (-10.0)) ?(look_at = Vec3.zero ())
     ~pixel_height () =
   let ez = look_at -@ pos |> Vec3.normalize in
-  let ex = Vec3.cross (Vec3.create 0.0 1.0 0.0) ez |> Vec3.normalize in
-  let ey = Vec3.cross ez ex |> Vec3.normalize in
+  let ex = Vec3.create 0.0 1.0 0.0 |> Vec3.cross ez |> Vec3.normalize in
+  let ey = Vec3.copy ez |> Vec3.cross ex |> Vec3.normalize in
   {
     fov = 1.12;
     aspect_ratio = 16.0 /. 9.0;
@@ -51,6 +51,8 @@ let get_ray camera (`Col c) (`Row r) : Ray.t =
     ((float_of_int r +. jitter ()) /. float_of_int rows *. virtual_height)
     -. (virtual_height /. 2.0)
   in
-  let dir = (camera.ex *@ x) +@ (camera.ey *@ y) +@ camera.ez in
+  let dir =
+    Vec3.copy camera.ez |> Vec3.mul_add camera.ex x |> Vec3.mul_add camera.ey y
+  in
   let origin = camera.pos in
   Ray.create ~origin ~dir |> Ray.normalize
