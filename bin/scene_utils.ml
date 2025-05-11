@@ -38,6 +38,7 @@ let mc =
   | `Mirror -> Refractive { reflect_prob = 1.0 }
   | `Glass -> Refractive { reflect_prob = 0.0 }
   | `Earth -> Diffuse { tex = tex_earth; reflect_prob = 0.0 }
+  | `MipmapDebug -> Diffuse { tex = MipmapDebug; reflect_prob = 0.0 }
 
 let ( % ) (prim : Primitive.t) tr =
   { prim with shape = Shape.transform prim.shape tr }

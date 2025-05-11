@@ -107,3 +107,16 @@ let obj_scene pixel_height =
           ];
       lights = [ light_at (Vec3.create (-18.0) (-10.0) (-20.0)) 500.0 ];
     }
+
+let test_scene pixel_height t =
+  {
+    camera = Camera.create ~pos:(Vec3.create 1.0 (-1.0) (-4.0)) ~pixel_height ();
+    primitives =
+      [
+        ground `MipmapDebug 1.0;
+        sphere_on_y1 (-2.0) 0.0 `Mirror 1.0;
+        sphere_on_y1 0.0 0.0 `MipmapDebug 1.0;
+        sphere_on_y1 2.0 0.0 `Glass 1.0;
+      ];
+    lights = [ light_at (Vec3.create (-10.0) (-30.0) (-30.0)) 2000.0 ];
+  }

@@ -24,7 +24,7 @@ let create ?(pos = Vec3.create 0.0 0.0 (-10.0)) ?(look_at = Vec3.zero)
     ex;
     ey;
     ez;
-    pixel_jitter = true;
+    pixel_jitter = false; (* TODO: set back to true *)
     pixel_height;
   }
 

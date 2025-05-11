@@ -6,6 +6,7 @@ type t =
   | Constant of Vec3.t
   | Checkered of int * int * Vec3.t * Vec3.t
   | Image of int * int * Vec3.t array array
+  | MipmapDebug
 
 let eval tex u v =
   let u = clamp 0.0 1.0 u in
@@ -25,3 +26,4 @@ let eval tex u v =
       let c = int_of_float (floor (float_of_int cols *. v)) in
       (* TODO: add interpolation *)
       a.(r).(c)
+  | MipmapDebug -> Vec3.create 1.0 0.0 1.0
