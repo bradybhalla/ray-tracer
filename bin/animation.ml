@@ -11,7 +11,8 @@ let render n i =
   print_newline ();
   Render.create
     ~scene:(create_scene (float_of_int i /. float_of_int n))
-    ~params:{ samples_per_pixel = 10 } ~tracer:phong
+    ~params:{ samples_per_pixel = 10; num_domains = 5 }
+    ~tracer:phong
   |> Ppm.of_render
 
 let () =
