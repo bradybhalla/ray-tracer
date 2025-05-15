@@ -21,7 +21,9 @@ let tex_grad nu nv =
               let v = float_of_int c /. float_of_int nv in
               Vec3.create u v (1.0 -. (u *. v)))) )
 
-let tex_earth = Ppm.of_file "textures/earth.ppm" `P6 |> Ppm.to_texture
+let earth_image = Ppm.of_file "textures/earth.ppm" `P6 |> Ppm.to_image
+let tex_earth = Texture.Image earth_image
+let tex_mipmap_earth = Texture.create_mipmap earth_image
 
 (* generate materials from names *)
 let mc =
@@ -38,6 +40,7 @@ let mc =
   | `Mirror -> Refractive { reflect_prob = 1.0 }
   | `Glass -> Refractive { reflect_prob = 0.0 }
   | `Earth -> Diffuse { tex = tex_earth; reflect_prob = 0.0 }
+  | `MipmapEarth -> Diffuse { tex = tex_mipmap_earth; reflect_prob = 0.0 }
   | `MipmapDebug -> Diffuse { tex = MipmapDebug; reflect_prob = 0.0 }
 
 let ( % ) (prim : Primitive.t) tr =

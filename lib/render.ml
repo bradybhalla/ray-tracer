@@ -9,7 +9,9 @@ type scene = {
 }
 
 type params = { samples_per_pixel : int; num_domains : int }
-type tracer = scene -> Ray.t -> Vec3.t
+
+(* TODO: change back to not have col row camera after lod is fixed *)
+type tracer = scene -> Ray.t -> [`Col of int] -> [`Row of int] -> Camera.t -> Vec3.t
 
 (* pixel color is stored as a sum of all samples and the number of samples *)
 (* sum of all samples and the number of samples *)
@@ -40,7 +42,7 @@ let update_with_sample data (`Col x) (`Row y) (c : Vec3.t) =
   in
   data.(y).(x) <- new_info
 
-let create_section scene params tracer (`Col width) (`Row y0) (`Row y1) =
+let create_section scene params (tracer: tracer) (`Col width) (`Row y0) (`Row y1) =
   let height = y1 - y0 in
   let data =
     Array.make_matrix height width
@@ -50,7 +52,7 @@ let create_section scene params tracer (`Col width) (`Row y0) (`Row y1) =
     for x = 0 to width - 1 do
       for _ = 1 to params.samples_per_pixel do
         let ray = Camera.get_ray scene.camera (`Col x) (`Row (y0 + y)) in
-        let color = tracer scene ray in
+        let color = tracer scene ray (`Col x) (`Row (y0 + y)) scene.camera in
         update_with_sample data (`Col x) (`Row y) color
       done
     done

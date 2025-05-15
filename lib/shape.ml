@@ -146,8 +146,8 @@ module Plane : ShapeInterface with type params = plane_params = struct
               tex_coord =
                 (let proj_pos = Ray.at ray t -@ pos in
                  {
-                   u = Vec3.dot proj_pos udir |> decimal;
-                   v = Vec3.dot proj_pos vdir |> decimal;
+                   u = Vec3.dot proj_pos udir /. Vec3.mag_sq udir |> decimal;
+                   v = Vec3.dot proj_pos vdir /. Vec3.mag_sq vdir |> decimal;
                  });
               medium_transition = Out2Out;
             } )

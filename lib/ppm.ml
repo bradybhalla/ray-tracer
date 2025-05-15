@@ -37,7 +37,7 @@ let of_render (render : Render.t) =
   in
   { width; height; max_color_value = default_max_val; data }
 
-let to_texture (ppm : t) : Texture.t =
+let to_image (ppm : t) : Texture.image =
   let calc_value v =
     let normalized = float_of_int v /. float_of_int ppm.max_color_value in
     let corrected =
@@ -56,7 +56,7 @@ let to_texture (ppm : t) : Texture.t =
             Vec3.create (calc_value r) (calc_value g) (calc_value b))
         row)
     ppm.data;
-  Image (rows, cols, data)
+  (rows, cols, data)
 
 let of_file (filename : string) (mode : [ `P6 ]) : t =
   let chan = open_in_bin filename in

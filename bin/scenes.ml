@@ -108,15 +108,19 @@ let obj_scene pixel_height =
       lights = [ light_at (Vec3.create (-18.0) (-10.0) (-20.0)) 500.0 ];
     }
 
+let spheres = List.init 20 (fun i ->
+            sphere_on_y1
+              (float_of_int i -. (8.0 /. 2.0))
+              (float_of_int i *. 3.0)
+              `MipmapEarth 1.0)
+
 let test_scene pixel_height t =
+  let t = t *. Float.pi /. 2.0 in
+  let v = 10.0 -. 9.8 *. sin t in
   {
     camera = Camera.create ~pos:(Vec3.create 1.0 (-1.0) (-4.0)) ~pixel_height ();
     primitives =
-      [
-        ground `MipmapDebug 1.0;
-        sphere_on_y1 (-2.0) 0.0 `Mirror 1.0;
-        sphere_on_y1 0.0 0.0 `MipmapDebug 1.0;
-        sphere_on_y1 2.0 0.0 `Glass 1.0;
-      ];
+      [ ground (`Black) 0.0 % [Scale (Vec3.create v v v); Translation (Vec3.create 0.0 1.0 0.0)] ] @
+      spheres;
     lights = [ light_at (Vec3.create (-10.0) (-30.0) (-30.0)) 2000.0 ];
   }

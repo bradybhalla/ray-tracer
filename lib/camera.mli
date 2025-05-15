@@ -11,3 +11,12 @@ val get_pixel_dim : t -> [ `Col of int ] * [ `Row of int ]
 
 val get_ray : t -> [ `Col of int ] -> [ `Row of int ] -> Ray.t
 (** Calculate the ray corresponding to a specific pixel of the camera. *)
+
+val get_level_of_detail :
+  t ->
+  [ `Col of int ] ->
+  [ `Row of int ] ->
+  Shape.t ->
+  shape_intersection ->
+  float
+(** Calculate the level of detail of the texture at an intersection *)

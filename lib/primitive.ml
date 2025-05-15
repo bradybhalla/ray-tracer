@@ -3,16 +3,17 @@ open Utils
 type t = { shape : Shape.t; material : Material.t; medium : Medium.spec }
 
 let get_intersection (prim : t) ((t, si) : float * shape_intersection) :
-    (float * intersection) option =
+    (float * (intersection * Shape.t)) option =
   Some
     ( t,
-      {
+      ({
         si;
         material = prim.material;
         medium_incident = Medium.get_incident prim.medium si.medium_transition;
         medium_transmitted =
           Medium.get_transmitted prim.medium si.medium_transition;
-      } )
+      }, prim.shape) )
+    (* TODO: dont return shape from here once lod is in tangent plane *)
 
 let cmp v v' =
   match (v, v') with
