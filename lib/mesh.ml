@@ -56,9 +56,9 @@ let of_file (filename : string) =
     faces = fs;
   }
 
-let to_shapes (mesh : t) : Shape.t list =
+let to_shapes (mesh : t) : Primitive.PrimShape.t list =
   let face_to_triangle ((f0, f1, f2) : f) =
-    Shape.create
+    Primitive.PrimShape.create
       (TriangleParams
          {
            p0 = mesh.vertices.(f0.vi - 1) *@ 100.0;

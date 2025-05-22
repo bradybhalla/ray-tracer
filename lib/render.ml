@@ -2,14 +2,8 @@ open Math
 open Utils
 module T = Domainslib.Task
 
-type scene = {
-  camera : Camera.t;
-  primitives : Primitive.t list;
-  lights : Light.t list;
-}
-
 type params = { samples_per_pixel : int; num_domains : int }
-type tracer = scene -> Ray.t -> Vec3.t
+type tracer = Scene.t -> Ray.t -> Vec3.t
 
 (* pixel color is stored as a sum of all samples and the number of samples *)
 (* sum of all samples and the number of samples *)
@@ -40,11 +34,11 @@ let update_with_sample data (`Col x) (`Row y) (c : Vec3.t) =
   in
   data.(y).(x) <- new_info
 
-let create_section scene params tracer (`Col width) (`Row y0) (`Row y1) =
+let create_section (scene: Scene.t) params tracer (`Col width) (`Row y0) (`Row y1) =
   let height = y1 - y0 in
   let data =
     Array.make_matrix height width
-      { weighted_color_sum = Vec3.zero; sum_weights = 0.0 }
+      { weighted_color_sum = Vec3.zero (); sum_weights = 0.0 }
   in
   for y = 0 to height - 1 do
     for x = 0 to width - 1 do
@@ -58,7 +52,7 @@ let create_section scene params tracer (`Col width) (`Row y0) (`Row y1) =
   { data; width; height }
 
 (* TODO: probably setup and teardown pool in main function instead of here *)
-let create ~(scene : scene) ~(params : params) ~(tracer : tracer) : t =
+let create ~(scene : Scene.t) ~(params : params) ~(tracer : tracer) : t =
   let `Col width, `Row height = Camera.get_pixel_dim scene.camera in
   let pool = T.setup_pool ~num_domains:params.num_domains () in
   let res =

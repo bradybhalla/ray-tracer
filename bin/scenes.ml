@@ -3,6 +3,28 @@ open Ray_tracer.Math
 open Ray_tracer.Render
 open Ray_tracer.Transform
 open Scene_utils
+open Ray_tracer.Scene
+
+let test_scene pixel_height t =
+  let t = 2.0 *. Float.pi *. t in
+  let tr1 =
+    [
+      Scale (Vec3.create (1.0 /. (1.0 +. (2.0 *. t))) 1.0 1.0);
+      Translation (Vec3.create (-2.0) 0.0 0.0);
+    ]
+  in
+  let tr2 = [ Rotation (Vec3.create 0.0 (-1.0) 0.0, t) ] in
+  {
+    camera = Camera.create ~pos:(Vec3.create (-1.0) (-1.0) (-4.0)) ~pixel_height ();
+    primitives =
+      [
+        sphere_on_y1 0.0 0.0 `Mirror 1.0 % tr1;
+        sphere_on_y1 2.0 0.0 `White 1.0;
+        sphere_on_y1 0.0 0.0 (`Gradient (9, 22)) 1.0 % tr2;
+        ground (`Checkerboard (2, 2)) 1.0;
+      ];
+    lights = [ sphere_light_at (Vec3.create 0.0 (-5.0) 0.0) 3.0 10.0; InfiniteLight {power=0.2}];
+  }
 
 let spheres_scene pixel_height t =
   let t = 2.0 *. Float.pi *. t in
@@ -45,7 +67,7 @@ let room_scene pixel_height t =
         sphere_at (Vec3.create (-0.5) 1.0 2.0) 1.0 `Mirror;
         sphere_at (Vec3.create 0.5 1.5 (-0.5)) 0.5 `Glass;
       ];
-    lights = [ light_at (Vec3.create 0.0 (-1.8) 0.0) 20.0 ];
+    lights = [ sphere_light_at (Vec3.create 0.0 (-1.0) (0.0)) 1.0 10.0 ];
   }
 
 let space_scene pixel_height t =
@@ -60,7 +82,7 @@ let space_scene pixel_height t =
         sphere_at (Vec3.create 3.0 0.0 0.0) 3.0 `Earth;
         {
           shape =
-            Shape.create
+            Primitive.PrimShape.create
               (TriangleParams
                  {
                    p0 = Vec3.create (-5.0) (-5.0) (-5.0);

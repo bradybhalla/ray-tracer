@@ -1,7 +1,7 @@
 module Vec3 = struct
   type t = { x : float; y : float; z : float }
 
-  let zero = { x = 0.0; y = 0.0; z = 0.0 }
+  let zero () = { x = 0.0; y = 0.0; z = 0.0 }
   let create x y z = { x; y; z }
   let dot v1 v2 = (v1.x *. v2.x) +. (v1.y *. v2.y) +. (v1.z *. v2.z)
   let add v1 v2 = { x = v1.x +. v2.x; y = v1.y +. v2.y; z = v1.z +. v2.z }
@@ -55,6 +55,10 @@ module Sample = struct
     in
     let v = v -@ Vec3.create 0.5 0.5 0.5 in
     Vec3.normalize v
+
+  let rec hemisphere_unit_vec3 normal =
+    let v = unit_vec3 () in
+    if Vec3.dot v normal >= 0.0 then v else hemisphere_unit_vec3 normal
 
   let float () = Random.float 1.0
 end

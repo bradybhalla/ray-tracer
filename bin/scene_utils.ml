@@ -40,19 +40,20 @@ let mc =
   | `Earth -> Diffuse { tex = tex_earth; reflect_prob = 0.0 }
 
 let ( % ) (prim : Primitive.t) tr =
-  { prim with shape = Shape.transform prim.shape tr }
+  { prim with shape = Primitive.PrimShape.transform prim.shape tr }
 
 (* build primitives *)
 let sphere_at v r mat : Primitive.t =
   let material = mc mat in
-  {
-    shape = Shape.create (SphereParams { pos = v; radius = r });
+  let res : Primitive.t = {
+    shape = Primitive.PrimShape.create (SphereParams { pos = v; radius = r });
     material;
     medium =
       (match material with
       | Refractive _ -> { inside = 1.5; outside = Medium.default }
       | _ -> Medium.default_spec);
-  }
+  } in
+  res
 
 let sphere_on_y1 x z mat r : Primitive.t =
   sphere_at (Vec3.create x (1.0 -. r) z) r mat
@@ -60,7 +61,7 @@ let sphere_on_y1 x z mat r : Primitive.t =
 let ground mat y : Primitive.t =
   {
     shape =
-      Shape.create
+      Primitive.PrimShape.create
         (PlaneParams
            { normal = Vec3.create 0.0 (-1.0) 0.0; pos = Vec3.create 0.0 y 0.0 });
     material = mc mat;
@@ -70,9 +71,10 @@ let ground mat y : Primitive.t =
 let wall_facing_origin (pos : Vec3.t) mat : Primitive.t =
   {
     shape =
-      Shape.create (PlaneParams { normal = Vec3.normalize (pos *@ -1.0); pos });
+      Primitive.PrimShape.create (PlaneParams { normal = Vec3.normalize (pos *@ -1.0); pos });
     material = mc mat;
     medium = Medium.default_spec;
   }
 
-let light_at pos power = Light.Point { pos; power }
+let light_at pos power = Light.GeometryLight { shape=Light.LightShape.create (PointParams pos); power }
+let sphere_light_at pos radius power = Light.GeometryLight { shape=Light.LightShape.create (SphereParams {pos; radius}); power }

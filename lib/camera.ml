@@ -12,7 +12,7 @@ type t = {
   pixel_height : int;
 }
 
-let create ?(pos = Vec3.create 0.0 0.0 (-10.0)) ?(look_at = Vec3.zero)
+let create ?(pos = Vec3.create 0.0 0.0 (-10.0)) ?(look_at = Vec3.zero ())
     ~pixel_height () =
   let ez = look_at -@ pos |> Vec3.normalize in
   let ex = Vec3.cross (Vec3.create 0.0 1.0 0.0) ez |> Vec3.normalize in
