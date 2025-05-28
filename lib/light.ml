@@ -1,71 +1,39 @@
 open Math
 open Utils
 
-module LightShape = struct
-  module type RequiredInterface = sig
-    type t
-    type params
-
-    val create : params -> t
-    val transform : t -> Transform.t -> t
-    val sample_point : t -> Vec3.t
-    val intersect : t -> Ray.t -> (float * shape_intersection) option
-  end
-
-  (* constrain shapes to the required interface for light sources *)
-  module Sphere : RequiredInterface with type params = Shape_sphere.params =
-    Shape_sphere
-
-  module Point : RequiredInterface with type params = Shape_point.params =
-    Shape_point
-
-  type t = Sphere of Sphere.t | Point of Point.t
-  type params = SphereParams of Sphere.params | PointParams of Point.params
-
-  let create (p : params) =
-    match p with
-    | SphereParams p -> Sphere (Sphere.create p)
-    | PointParams p -> Point (Point.create p)
-
-  let transform (v : t) (tr : Transform.t) : t =
-    match v with
-    | Sphere v -> Sphere (Sphere.transform v tr)
-    | Point v -> Point (Point.transform v tr)
-
-  let sample_point (v : t) : Vec3.t =
-    match v with
-    | Sphere v -> Sphere.sample_point v
-    | Point v -> Point.sample_point v
-
-  let intersect (v : t) (ray : Ray.t) : (float * shape_intersection) option =
-    match v with
-    | Sphere v -> Sphere.intersect v ray
-    | Point v -> Point.intersect v ray
-end
+type geometric_light = { shape : Shape.t; brightness : Texture.t }
+type infinite_light = Uniform of Vec3.t
 
 type t =
-  | GeometryLight of { shape : LightShape.t; power : float }
-  | InfiniteLight of {power: float}
+  | Geometric of geometric_light
+  | Infinite of infinite_light
+  | Point of { pos : Vec3.t; brightness : Vec3.t }
 
-let get_sample (light : t) (pos : Vec3.t) =
+let sample_Li (light : t) (si : shape_intersection) =
+  let sample_from_point light_point color_at_light =
+    let point_to_light = light_point -@ si.point in
+    let wi = Vec3.normalize point_to_light in
+    {
+      brightness_at_point = color_at_light /@ Vec3.mag_sq point_to_light;
+      wi;
+      cosi = Vec3.dot wi si.normal |> abs_float;
+    }
+  in
   match light with
-  | GeometryLight { shape; power } ->
-      let light_pos = LightShape.sample_point shape in
-      let pos_to_light = light_pos -@ pos in
-      Some
-        {
-          light_pos;
-          dir_to_light = Vec3.normalize pos_to_light;
-          dist_to_light = Vec3.mag pos_to_light;
-          power;
-        }
-  | InfiniteLight _ -> None
+  | Infinite (Uniform brightness) ->
+      let wi = Sample.unit_vec3 () in
+      {
+        brightness_at_point = brightness;
+        wi;
+        cosi = Vec3.dot wi si.normal |> abs_float;
+      }
+  | Geometric { shape; brightness } ->
+      let light_pos = Shape.sample_point shape in
+      sample_from_point light_pos (Texture.eval brightness si.tex_coord)
+  | Point { pos; brightness } -> sample_from_point pos brightness
 
-let get_intersection (ray : Ray.t) (light : t) =
-  match light with
-  | GeometryLight { shape; power } ->
-      LightShape.intersect shape ray
-      |> Option.fold ~none:None ~some:(fun (t, i) ->
-             Some (t, { pos = i.point; power }))
-  | InfiniteLight {power} ->
-      Some (Float.max_float, { pos = Ray.at ray 999.0; power })
+let get_Le (light : infinite_light) (ray : Ray.t) =
+  match light with Uniform b -> b
+
+let get_L (light : geometric_light) (si : shape_intersection) =
+  Texture.eval light.brightness si.tex_coord

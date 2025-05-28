@@ -11,25 +11,15 @@ type shape_intersection = {
   medium_transition : Medium.transition;
 }
 
-type primitive_intersection = {
-  si : shape_intersection;
-  material : Material.t;
-  medium_incident : Medium.t;
-  medium_transmitted : Medium.t;
-}
-
-type light_intersection = {
-  pos: Vec3.t;
-  power: float;
-}
-
-type intersection = PrimitiveInt of primitive_intersection | LightInt of light_intersection | NoInt
-
+(* light sample from a point *)
 type light_sample = {
-  light_pos: Vec3.t;
-  dir_to_light: Vec3.t;
-  dist_to_light: float;
-  power: float;
+  (* attenuated brightness *)
+  brightness_at_point : Vec3.t;
+  (* direction to light *)
+  wi : Vec3.t;
+  (* absolute value of cos of angle between normal and wi *)
+  (* brightness reaching point should be `brightness_at_point *. cosi` *)
+  cosi : float;
 }
 
 module Ray = struct
@@ -39,17 +29,18 @@ module Ray = struct
   let normalize ray = { ray with dir = Vec3.normalize ray.dir }
   let at ray time = ray.origin +@ (ray.dir *@ time)
 
-  let reflect (ray : t) (i : primitive_intersection) =
+  let reflect (ray : t) (si : shape_intersection) =
     {
-      origin = i.si.point +@ (i.si.normal *@ 0.001);
-      dir = Vec3.reflect ray.dir i.si.normal;
+      origin = si.point +@ (si.normal *@ 0.001);
+      dir = Vec3.reflect ray.dir si.normal;
     }
 
-  let refract (ray : t) (i : primitive_intersection) =
+  let refract (ray : t) (si : shape_intersection) mspec mtrans =
     {
-      origin = i.si.point +@ (i.si.normal *@ -0.001);
+      origin = si.point +@ (si.normal *@ -0.001);
       dir =
-        Vec3.refract ray.dir i.si.normal
-          (i.medium_incident /. i.medium_transmitted);
+        Vec3.refract ray.dir si.normal
+          (Medium.get_incident mspec mtrans
+          /. Medium.get_transmitted mspec mtrans);
     }
 end

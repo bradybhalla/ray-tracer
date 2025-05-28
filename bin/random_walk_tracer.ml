@@ -1,3 +1,4 @@
+(*
 open Ray_tracer
 open Ray_tracer.Utils
 open Ray_tracer.Texture
@@ -38,3 +39,4 @@ let random_walk (scene : Scene.t) (ray : Ray.t) =
           | Refractive _ -> Vec3.zero ())
   in
   helper ray 5
+  *)

@@ -40,19 +40,22 @@ let mc =
   | `Earth -> Diffuse { tex = tex_earth; reflect_prob = 0.0 }
 
 let ( % ) (prim : Primitive.t) tr =
-  { prim with shape = Primitive.PrimShape.transform prim.shape tr }
+  { prim with shape = Shape.transform prim.shape tr }
 
 (* build primitives *)
 let sphere_at v r mat : Primitive.t =
   let material = mc mat in
-  let res : Primitive.t = {
-    shape = Primitive.PrimShape.create (SphereParams { pos = v; radius = r });
-    material;
-    medium =
-      (match material with
-      | Refractive _ -> { inside = 1.5; outside = Medium.default }
-      | _ -> Medium.default_spec);
-  } in
+  let res : Primitive.t =
+    {
+      shape = Shape.create (SphereParams { pos = v; radius = r });
+      material;
+      light = None;
+      medium =
+        (match material with
+        | Refractive _ -> { inside = 1.5; outside = Medium.default }
+        | _ -> Medium.default_spec);
+    }
+  in
   res
 
 let sphere_on_y1 x z mat r : Primitive.t =
@@ -61,20 +64,34 @@ let sphere_on_y1 x z mat r : Primitive.t =
 let ground mat y : Primitive.t =
   {
     shape =
-      Primitive.PrimShape.create
+      Shape.create
         (PlaneParams
            { normal = Vec3.create 0.0 (-1.0) 0.0; pos = Vec3.create 0.0 y 0.0 });
     material = mc mat;
+    light = None;
     medium = Medium.default_spec;
   }
 
 let wall_facing_origin (pos : Vec3.t) mat : Primitive.t =
   {
     shape =
-      Primitive.PrimShape.create (PlaneParams { normal = Vec3.normalize (pos *@ -1.0); pos });
+      Shape.create (PlaneParams { normal = Vec3.normalize (pos *@ -1.0); pos });
     material = mc mat;
+    light = None;
     medium = Medium.default_spec;
   }
 
-let light_at pos power = Light.GeometryLight { shape=Light.LightShape.create (PointParams pos); power }
-let sphere_light_at pos radius power = Light.GeometryLight { shape=Light.LightShape.create (SphereParams {pos; radius}); power }
+let point_light_at pos power =
+  Light.Point { pos; brightness = Vec3.create 1.0 1.0 1.0 *@ power }
+
+let sphere_light_at pos radius power =
+  let prim = sphere_at pos radius `Black in
+  {
+    prim with
+    light =
+      Some
+        {
+          shape = prim.shape;
+          brightness = Texture.Constant (Vec3.create 1.0 1.0 1.0 *@ power);
+        };
+  }

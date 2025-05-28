@@ -7,9 +7,9 @@ type t =
   | Checkered of int * int * Vec3.t * Vec3.t
   | Image of int * int * Vec3.t array array
 
-let eval tex u v =
-  let u = clamp 0.0 1.0 u in
-  let v = clamp 0.0 1.0 v in
+let eval tex tex_coord =
+  let u = clamp 0.0 1.0 tex_coord.u in
+  let v = clamp 0.0 1.0 tex_coord.v in
   match tex with
   | Constant c -> c
   | Checkered (nu, nv, c1, c2) ->

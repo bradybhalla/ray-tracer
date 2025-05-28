@@ -1,9 +1,9 @@
 open Ray_tracer
 open Phong_tracer
 
-(* let create_scene = Scenes.space_scene 300 *)
+let create_scene = Scenes.space_scene 300
 (* let create_scene = Scenes.room_scene 300 *)
-let create_scene = Scenes.spheres_scene 300
+(* let create_scene = Scenes.spheres_scene 300 *)
 (* let create_scene = Scenes.obj_scene 150 *)
 
 let render n i =

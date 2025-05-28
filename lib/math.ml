@@ -6,6 +6,7 @@ module Vec3 = struct
   let dot v1 v2 = (v1.x *. v2.x) +. (v1.y *. v2.y) +. (v1.z *. v2.z)
   let add v1 v2 = { x = v1.x +. v2.x; y = v1.y +. v2.y; z = v1.z +. v2.z }
   let sub v1 v2 = { x = v1.x -. v2.x; y = v1.y -. v2.y; z = v1.z -. v2.z }
+  let mul v1 v2 = { x = v1.x *. v2.x; y = v1.y *. v2.y; z = v1.z *. v2.z }
   let cmul v k = { x = v.x *. k; y = v.y *. k; z = v.z *. k }
   let cdiv v k = { x = v.x /. k; y = v.y /. k; z = v.z /. k }
   let min m v = { x = min m v.x; y = min m v.y; z = min m v.z }
@@ -44,6 +45,7 @@ end
 
 let ( +@ ) = Vec3.add
 let ( -@ ) = Vec3.sub
+let ( *@@ ) = Vec3.mul
 let ( *@ ) = Vec3.cmul
 let ( /@ ) = Vec3.cdiv
 
