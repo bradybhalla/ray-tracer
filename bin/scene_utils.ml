@@ -27,17 +27,17 @@ let tex_earth = Ppm.of_file "textures/earth.ppm" `P6 |> Ppm.to_texture
 let mc =
   let open Ray_tracer.Material in
   function
-  | `Red -> Diffuse { tex = tex_red; reflect_prob = 0.3 }
-  | `Green -> Diffuse { tex = tex_green; reflect_prob = 0.0 }
-  | `Blue -> Diffuse { tex = tex_blue; reflect_prob = 0.0 }
-  | `White -> Diffuse { tex = tex_white; reflect_prob = 0.0 }
-  | `Black -> Diffuse { tex = tex_black; reflect_prob = 0.0 }
+  | `Red -> Diffuse { tex = tex_red }
+  | `Green -> Diffuse { tex = tex_green }
+  | `Blue -> Diffuse { tex = tex_blue }
+  | `White -> Diffuse { tex = tex_white }
+  | `Black -> Diffuse { tex = tex_black }
   | `Checkerboard (nu, nv) ->
-      Diffuse { tex = tex_checker nu nv; reflect_prob = 0.0 }
-  | `Gradient (nu, nv) -> Diffuse { tex = tex_grad nu nv; reflect_prob = 0.0 }
-  | `Mirror -> Refractive { reflect_prob = 1.0 }
-  | `Glass -> Refractive { reflect_prob = 0.0 }
-  | `Earth -> Diffuse { tex = tex_earth; reflect_prob = 0.0 }
+      Diffuse { tex = tex_checker nu nv }
+  | `Gradient (nu, nv) -> Diffuse { tex = tex_grad nu nv }
+  | `Mirror -> Mirror
+  | `Glass -> Glass
+  | `Earth -> Diffuse { tex = tex_earth }
 
 let ( % ) (prim : Primitive.t) tr =
   { prim with shape = Shape.transform prim.shape tr }
@@ -52,7 +52,7 @@ let sphere_at v r mat : Primitive.t =
       light = None;
       medium =
         (match material with
-        | Refractive _ -> { inside = 1.5; outside = Medium.default }
+        | Glass -> { inside = 1.5; outside = Medium.default }
         | _ -> Medium.default_spec);
     }
   in
@@ -84,14 +84,24 @@ let wall_facing_origin (pos : Vec3.t) mat : Primitive.t =
 let point_light_at pos power =
   Light.Point { pos; brightness = Vec3.create 1.0 1.0 1.0 *@ power }
 
-let sphere_light_at pos radius power =
-  let prim = sphere_at pos radius `Black in
+let triangle_light_at pos r power : Primitive.t =
+  let shape =
+    Shape.create
+      (TriangleParams
+         {
+           p0 = pos +@ Vec3.create r 0.0 r;
+           p1 = pos +@ Vec3.create (-.r) 0.0 (-.r);
+           p2 = pos +@ Vec3.create (-.r) 0.0 r;
+         })
+  in
   {
-    prim with
+    shape;
+    material = mc `Black;
+    medium = Medium.default_spec;
     light =
       Some
         {
-          shape = prim.shape;
-          brightness = Texture.Constant (Vec3.create 1.0 1.0 1.0 *@ power);
+          shape;
+          brightness = Texture.Constant (Vec3.create 1.0 0.0 0.0 *@ power);
         };
   }

@@ -1,3 +1,6 @@
+open Math
+
 type t =
-  | Diffuse of { tex : Texture.t; reflect_prob : float }
-  | Refractive of { reflect_prob : float }
+  | Diffuse of { tex : Texture.t }
+  | Glass
+  | Mirror

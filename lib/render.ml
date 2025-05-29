@@ -2,6 +2,7 @@ open Math
 open Utils
 module T = Domainslib.Task
 
+(* TODO: add max depth to params *)
 type params = { samples_per_pixel : int; num_domains : int }
 type tracer = Scene.t -> Ray.t -> Vec3.t
 
@@ -54,7 +55,7 @@ let create_section (scene: Scene.t) params tracer (`Col width) (`Row y0) (`Row y
 (* TODO: probably setup and teardown pool in main function instead of here *)
 let create ~(scene : Scene.t) ~(params : params) ~(tracer : tracer) : t =
   let `Col width, `Row height = Camera.get_pixel_dim scene.camera in
-  let pool = T.setup_pool ~num_domains:params.num_domains () in
+  let pool = T.setup_pool ~num_domains:0 () in
   let res =
     T.run pool (fun _ ->
         (* split into sections ~20 pixels tall *)

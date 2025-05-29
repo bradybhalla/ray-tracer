@@ -66,5 +66,5 @@ let transform triangle tr =
 let sample_point triangle =
   let a = Sample.float () in
   let b = Sample.float () in
-  let c = Sample.float () in
+  let c = 1.0 -. a -. b in
   point_from_bary triangle a b c

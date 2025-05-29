@@ -1,33 +1,34 @@
 open Math
+open Shapes
 
-type t = Sphere of Shape_sphere.t | Plane of Shape_plane.t | Triangle of Shape_triangle.t
+type t = Sphere of Sphere.t | Plane of Plane.t | Triangle of Triangle.t
 
 type params =
-  | SphereParams of Shape_sphere.params
-  | PlaneParams of Shape_plane.params
-  | TriangleParams of Shape_triangle.params
+  | SphereParams of Sphere.params
+  | PlaneParams of Plane.params
+  | TriangleParams of Triangle.params
 
 let create (p : params) =
   match p with
-  | SphereParams p -> Sphere (Shape_sphere.create p)
-  | PlaneParams p -> Plane (Shape_plane.create p)
-  | TriangleParams p -> Triangle (Shape_triangle.create p)
+  | SphereParams p -> Sphere (Sphere.create p)
+  | PlaneParams p -> Plane (Plane.create p)
+  | TriangleParams p -> Triangle (Triangle.create p)
 
 let intersect (s : t) ray =
   match s with
-  | Sphere v -> Shape_sphere.intersect v ray
-  | Plane v -> Shape_plane.intersect v ray
-  | Triangle v -> Shape_triangle.intersect v ray
+  | Sphere v -> Sphere.intersect v ray
+  | Plane v -> Plane.intersect v ray
+  | Triangle v -> Triangle.intersect v ray
 
 let transform (s : t) (tr : Transform.t) : t =
   match s with
-  | Sphere v -> Sphere (Shape_sphere.transform v tr)
-  | Plane v -> Plane (Shape_plane.transform v tr)
-  | Triangle v -> Triangle (Shape_triangle.transform v tr)
+  | Sphere v -> Sphere (Sphere.transform v tr)
+  | Plane v -> Plane (Plane.transform v tr)
+  | Triangle v -> Triangle (Triangle.transform v tr)
 
 let sample_point (s : t) : Vec3.t =
   match s with
-  | Sphere v -> Shape_sphere.sample_point v
-  | Triangle v -> Shape_triangle.sample_point v
+  | Sphere v -> Sphere.sample_point v
+  | Triangle v -> Triangle.sample_point v
   | Plane _ -> failwith "not implemented yet"
 

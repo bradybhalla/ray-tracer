@@ -17,9 +17,9 @@ type light_sample = {
   brightness_at_point : Vec3.t;
   (* direction to light *)
   wi : Vec3.t;
-  (* absolute value of cos of angle between normal and wi *)
-  (* brightness reaching point should be `brightness_at_point *. cosi` *)
-  cosi : float;
+  (* dist for a ray to reach light location
+     used for shadow rays *)
+  light_dist : float;
 }
 
 module Ray = struct
@@ -37,10 +37,12 @@ module Ray = struct
 
   let refract (ray : t) (si : shape_intersection) mspec mtrans =
     {
-      origin = si.point +@ (si.normal *@ -0.001);
+      origin = si.point +@ (si.normal *@ -0.01);
       dir =
         Vec3.refract ray.dir si.normal
           (Medium.get_incident mspec mtrans
           /. Medium.get_transmitted mspec mtrans);
     }
 end
+
+let sum_over f l = List.fold_left (fun a v -> a +@ f v) (Vec3.zero ()) l

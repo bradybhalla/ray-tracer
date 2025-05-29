@@ -1,12 +1,14 @@
 open Utils
 open Primitive
 open Light
+open Math
 
 type t = {
   camera : Camera.t;
   primitives : Primitive.t list;
-  finite_emitters : Light.t list;
+  finite_lights : Light.t list;
   infinite_lights : Light.infinite_light list;
+  all_lights : Light.t list;
 }
 
 let create ~(camera : Camera.t) ~(primitives : Primitive.t list)
@@ -15,17 +17,16 @@ let create ~(camera : Camera.t) ~(primitives : Primitive.t list)
     match p.light with None -> None | Some l -> Some (Geometric l)
   in
   let finite_of_light l =
-    match l with
-    | Geometric _ -> Some l
-    | Point _ -> Some l
-    | Infinite _ -> None
+    match l with Geometric _ | Point _ -> Some l | Infinite _ -> None
   in
   let infinite_of_light l = match l with Infinite l -> Some l | _ -> None in
+  let all_lights = List.filter_map light_of_prim primitives @ external_lights in
   {
     camera;
     primitives;
-    finite_emitters = List.filter_map light_of_prim primitives @ List.filter_map finite_of_light external_lights;
-    infinite_lights = List.filter_map infinite_of_light external_lights;
+    all_lights;
+    finite_lights = List.filter_map finite_of_light all_lights;
+    infinite_lights = List.filter_map infinite_of_light all_lights;
   }
 
 let first_primitive_intersection (scene : t) (ray : Ray.t) :
@@ -41,3 +42,18 @@ let first_primitive_intersection (scene : t) (ray : Ray.t) :
     scene.primitives |> List.map (Primitive.get_intersection ray)
   in
   prim_ints |> List.fold_left cmp None
+
+let is_shadowed (scene : t) (int : Primitive.intersection)
+    (sample : light_sample) =
+  let shadow_int =
+    first_primitive_intersection scene
+      (Ray.create
+         ~origin:(int.si.point +@ (sample.wi *@ 0.00001))
+         ~dir:sample.wi)
+  in
+  match shadow_int with
+  | None -> false
+  | Some { si; _ } ->
+      let dist = Vec3.mag (si.point -@ int.si.point) in
+      dist +. 0.001
+      < sample.light_dist (* this epsilon should be larger than the one above *)

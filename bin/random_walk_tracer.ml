@@ -1,42 +1,56 @@
-(*
 open Ray_tracer
 open Ray_tracer.Utils
 open Ray_tracer.Texture
 open Ray_tracer.Math
+open Ray_tracer.Primitive
 
-let bmul ({ x; y; z } : Vec3.t) ({ x = x'; y = y'; z = z' } : Vec3.t) : Vec3.t =
-  { x = x *. x'; y = y *. y'; z = z *. z' }
+let get_emitted_color int =
+  Option.fold ~none:(Vec3.zero ())
+    ~some:(fun l -> Light.get_L l int.si)
+    int.prim.light
 
-let random_walk (scene : Scene.t) (ray : Ray.t) =
-  let rec helper ray max_depth =
-    if max_depth <= 0 then Vec3.zero ()
-    else
-      let first_int = Scene.first_intersection scene ray in
-      match first_int with
-      | NoInt -> Vec3.zero ()
-      | LightInt { power; _ } -> Vec3.create 1.0 1.0 1.0 *@ power
-      | PrimitiveInt int -> (
-          match int.material with
-          | Diffuse { tex; reflect_prob } when reflect_prob < 0.5 ->
-              let wi = Sample.unit_vec3 () +@ int.si.normal |> Vec3.normalize in
-              let color =
-                Texture.eval tex int.si.tex_coord.u int.si.tex_coord.v
-              in
-              let abs_cos = Vec3.dot ray.dir wi |> Float.abs in
-              (* TODO: a better way to have rays offset themselves? *)
-              let outgoing_ray =
-                Ray.create
-                  ~origin:(int.si.point +@ (int.si.normal *@ 0.0001))
-                  ~dir:wi
-              in
-              bmul (helper outgoing_ray (max_depth - 1)) color *@ abs_cos
-          | Diffuse {reflect_prob; _}
-          | Refractive {reflect_prob} when reflect_prob >= 0.5 ->
-              let outgoing_ray = Ray.reflect ray int in
-              let wi = outgoing_ray.dir in
-              helper outgoing_ray (max_depth - 1)
-          | Diffuse _ -> failwith "unreachable"
-          | Refractive _ -> Vec3.zero ())
+(* TODO: make dependend on color instead of multiplying in diffuse *)
+(* TODO: also needs to transform to local coords for almost all bsdfs *)
+let bsdf wo wi normal =
+  let same_hemisphere =
+    let wo_sgn = Vec3.dot wo normal > 0.0 in
+    let wi_sgn = Vec3.dot wi normal > 0.0 in
+    wo_sgn = wi_sgn
   in
-  helper ray 5
-  *)
+  let reflectance = 0.2 in
+  if same_hemisphere then reflectance *. 1.0 /. Float.pi else 0.0
+
+let random_walk (scene : Scene.t) (initial_ray : Ray.t) =
+  let rec helper (ray : Ray.t) max_depth =
+    if max_depth <= 0 then Vec3.create 1.0 0.0 1.0
+    else
+      match Scene.first_primitive_intersection scene ray with
+      | None ->
+          sum_over (fun il -> Light.get_Le il ray) scene.infinite_lights
+      | Some int -> (
+          match int.prim.material with
+          | Diffuse { tex } ->
+              let color = Texture.eval tex int.si.tex_coord in
+              let wi = Sample.unit_vec3 () in
+              let fcos =
+                bsdf int.wo wi int.si.normal
+                *. (Vec3.dot wi int.si.normal |> abs_float)
+              in
+              if fcos = 0.0 then get_emitted_color int
+              else
+                let ray' =
+                  Ray.create ~origin:(int.si.point +@ (wi *@ 0.001)) ~dir:wi
+                in
+                let li = helper ray' (max_depth - 1) in
+                get_emitted_color int
+                +@ (color *@ fcos *@@ li /@ (1.0 /. (4.0 *. Float.pi)))
+          | Mirror ->
+              helper (Ray.reflect ray int.si) (max_depth - 1)
+              +@ get_emitted_color int
+          | Glass ->
+              let ray' =
+                Ray.refract ray int.si int.prim.medium int.si.medium_transition
+              in
+              helper ray' (max_depth - 1) +@ get_emitted_color int )
+  in
+  helper initial_ray 5

@@ -1,4 +1,5 @@
 open Utils
+open Math
 
 type t = {
   shape : Shape.t;
@@ -10,6 +11,7 @@ type t = {
 type intersection = {
   time : float;
   si : shape_intersection;
+  wo : Vec3.t; (* vector back to ray origin *)
   prim : t;
 }
 
@@ -17,4 +19,4 @@ let get_intersection (ray : Ray.t) (prim : t) =
   let shape_int = Shape.intersect prim.shape ray in
   match shape_int with
   | None -> None
-  | Some (t, si) -> Some { time = t; si; prim }
+  | Some (t, si) -> Some { time = t; si; prim; wo = ray.dir *@ -1.0 }
