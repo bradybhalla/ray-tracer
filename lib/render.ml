@@ -4,7 +4,7 @@ module T = Domainslib.Task
 
 (* TODO: add max depth to params *)
 type params = { samples_per_pixel : int; num_domains : int }
-type tracer = Scene.t -> Ray.t -> Vec3.t
+type tracer = scene:Scene.t -> ray:Ray.t -> Vec3.t
 
 (* pixel color is stored as a sum of all samples and the number of samples *)
 (* sum of all samples and the number of samples *)
@@ -25,18 +25,19 @@ let hstack r1 r2 =
       height = r1.height + r2.height;
     }
 
-let update_with_sample data (`Col x) (`Row y) (c : Vec3.t) =
-  let { weighted_color_sum; sum_weights } = data.(y).(x) in
+let update_with_sample data ~col ~row color =
+  let { weighted_color_sum; sum_weights } = data.(row).(col) in
   let new_info =
     {
-      weighted_color_sum = weighted_color_sum +@ c;
+      weighted_color_sum = weighted_color_sum +@ color;
       sum_weights = sum_weights +. 1.0;
     }
   in
-  data.(y).(x) <- new_info
+  data.(row).(col) <- new_info
 
-let create_section (scene: Scene.t) params tracer (`Col width) (`Row y0) (`Row y1) =
-  let height = y1 - y0 in
+let create_section ~(scene : Scene.t) ~params ~tracer ~width ~start_row ~end_row
+    =
+  let height = end_row - start_row in
   let data =
     Array.make_matrix height width
       { weighted_color_sum = Vec3.zero (); sum_weights = 0.0 }
@@ -44,9 +45,9 @@ let create_section (scene: Scene.t) params tracer (`Col width) (`Row y0) (`Row y
   for y = 0 to height - 1 do
     for x = 0 to width - 1 do
       for _ = 1 to params.samples_per_pixel do
-        let ray = Camera.get_ray scene.camera (`Col x) (`Row (y0 + y)) in
-        let color = tracer scene ray in
-        update_with_sample data (`Col x) (`Row y) color
+        let ray = Camera.get_ray scene.camera ~col:x ~row:(start_row + y) in
+        let color = tracer ~scene ~ray in
+        update_with_sample data ~col:x ~row:y color
       done
     done
   done;
@@ -54,7 +55,7 @@ let create_section (scene: Scene.t) params tracer (`Col width) (`Row y0) (`Row y
 
 (* TODO: probably setup and teardown pool in main function instead of here *)
 let create ~(scene : Scene.t) ~(params : params) ~(tracer : tracer) : t =
-  let `Col width, `Row height = Camera.get_pixel_dim scene.camera in
+  let width, height = Camera.get_pixel_dim scene.camera in
   let pool = T.setup_pool ~num_domains:0 () in
   let res =
     T.run pool (fun _ ->
@@ -69,8 +70,8 @@ let create ~(scene : Scene.t) ~(params : params) ~(tracer : tracer) : t =
               let low = bounds.(i) in
               let high = bounds.(i + 1) in
               T.async pool (fun _ ->
-                  create_section scene params tracer (`Col width) (`Row low)
-                    (`Row high)))
+                  create_section ~scene ~params ~tracer ~width ~start_row:low
+                    ~end_row:high))
         in
         (* await and combine all sections *)
         List.fold_left

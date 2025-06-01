@@ -1,6 +1,3 @@
 open Math
 
-type t =
-  | Diffuse of { tex : Texture.t }
-  | Glass
-  | Mirror
+type t = Diffuse of { tex : Texture.t } | Glass | Mirror

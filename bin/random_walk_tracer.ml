@@ -6,7 +6,7 @@ open Ray_tracer.Primitive
 
 let get_emitted_color int =
   Option.fold ~none:(Vec3.zero ())
-    ~some:(fun l -> Light.get_L l int.si)
+    ~some:(fun light -> Light.get_L ~light ~si:int.si)
     int.prim.light
 
 (* TODO: make dependend on color instead of multiplying in diffuse *)
@@ -20,13 +20,14 @@ let bsdf wo wi normal =
   let reflectance = 0.2 in
   if same_hemisphere then reflectance *. 1.0 /. Float.pi else 0.0
 
-let random_walk (scene : Scene.t) (initial_ray : Ray.t) =
+let random_walk ~(scene : Scene.t) ~(ray : Ray.t) =
+  let initial_ray = ray in
   let rec helper (ray : Ray.t) max_depth =
     if max_depth <= 0 then Vec3.create 0.0 0.0 0.0
     else
-      match Scene.first_primitive_intersection scene ray with
+      match Scene.first_primitive_intersection ~scene ~ray with
       | None ->
-          sum_over (fun il -> Light.get_Le il ray) scene.infinite_lights
+          sum_over (fun il -> Light.get_Le ~light:il ~ray) scene.infinite_lights
       | Some int -> (
           match int.prim.material with
           | Diffuse { tex } ->
@@ -51,6 +52,6 @@ let random_walk (scene : Scene.t) (initial_ray : Ray.t) =
               let ray' =
                 Ray.refract ray int.si int.prim.medium int.si.medium_transition
               in
-              helper ray' (max_depth - 1) +@ get_emitted_color int )
+              helper ray' (max_depth - 1) +@ get_emitted_color int)
   in
   helper initial_ray 15

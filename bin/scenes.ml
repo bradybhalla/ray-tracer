@@ -1,25 +1,27 @@
 open Ray_tracer
 open Ray_tracer.Math
-open Ray_tracer.Render
 open Ray_tracer.Transform
 open Scene_utils
-open Ray_tracer.Scene
 
 let lens pixel_height t =
   let t = 2.0 *. Float.pi *. t in
-  let tr = [Translation (Vec3.create 0.0 (-.0.25 +. sin t) 0.0)] in
-  let sc = [ Scale (Vec3.create 2.0 0.3 2.0) ]
-  in
+  let tr = [ Translation (Vec3.create 0.0 (-0.25 +. sin t) 0.0) ] in
+  let sc = [ Scale (Vec3.create 2.0 0.3 2.0) ] in
   Scene.create
     ~camera:
-      (Camera.create ~pos:(Vec3.create (0.0) (-2.0) (-6.0)) ~pixel_height ())
+      (Camera.create
+         {
+           pos = Some (Vec3.create 0.0 (-2.0) (-6.0));
+           pixel_height;
+           look_at = None;
+         })
     ~primitives:
       [
         sphere_on_y1 0.0 0.0 `Glass 1.0 % sc % tr;
         ground (`Checkerboard (2, 2)) 1.0;
         triangle_light_at (Vec3.create 1.5 (-2.0) 0.0) 3.0 20.0 % tr;
       ]
-    ~external_lights:[ Infinite (Environment (Vec3.create 0.2 0.2 0.2))]
+    ~external_lights:[ Infinite (Environment (Vec3.create 0.2 0.2 0.2)) ]
 
 let three_spheres pixel_height t =
   let t = 2.0 *. Float.pi *. t in
@@ -32,7 +34,12 @@ let three_spheres pixel_height t =
   let tr2 = [ Rotation (Vec3.create 0.0 (-1.0) 0.0, t) ] in
   Scene.create
     ~camera:
-      (Camera.create ~pos:(Vec3.create (-1.0) (-1.0) (-4.0)) ~pixel_height ())
+      (Camera.create
+         {
+           pos = Some (Vec3.create (-1.0) (-1.0) (-4.0));
+           pixel_height;
+           look_at = None;
+         })
     ~primitives:
       [
         sphere_on_y1 0.0 0.0 `Mirror 1.0 % tr1;
@@ -49,8 +56,11 @@ let room pixel_height t =
   Scene.create
     ~camera:
       (Camera.create
-         ~pos:(Vec3.create 0.0 1.0 (-4.0))
-         ~look_at:(Vec3.create 0.0 1.0 4.0) ~pixel_height ())
+         {
+           pos = Some (Vec3.create 0.0 1.0 (-4.0));
+           pixel_height;
+           look_at = None;
+         })
     ~primitives:
       [
         wall_facing_origin (Vec3.create 3.0 0.0 0.0) (`Checkerboard (2, 2));
@@ -72,8 +82,11 @@ let globe pixel_height t =
   Scene.create
     ~camera:
       (Camera.create
-         ~pos:(Vec3.create (-10.0 *. sin t) 0.0 (-10.0 *. cos t))
-         ~pixel_height ())
+         {
+           pos = Some (Vec3.create (-10.0 *. sin t) 0.0 (-10.0 *. cos t));
+           pixel_height;
+           look_at = None;
+         })
     ~primitives:
       [
         sphere_at (Vec3.create 3.0 0.0 0.0) 3.0 `Earth;
@@ -99,13 +112,20 @@ let globe pixel_height t =
       ]
 
 let onshape pixel_height =
-  let triangles = Mesh.of_file "objects/test_part.obj" |> Mesh.to_shapes in
+  let triangles =
+    Mesh.of_file "objects/test_part.obj" |> Mesh.to_shapes ~scale:100.0
+  in
   fun t ->
     let t = t *. 2.0 *. Float.pi in
     let rot = Transform.Rotation (Vec3.create 0.0 (-1.0) 0.0, t) in
     Scene.create
       ~camera:
-        (Camera.create ~pos:(Vec3.create 0.0 (-2.0) (-10.0)) ~pixel_height ())
+        (Camera.create
+           {
+             pos = Some (Vec3.create 0.0 (-2.0) (-10.0));
+             pixel_height;
+             look_at = None;
+           })
       ~primitives:
         (List.map
            (fun triangle ->

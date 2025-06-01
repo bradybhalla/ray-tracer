@@ -29,7 +29,7 @@ let create ~(camera : Camera.t) ~(primitives : Primitive.t list)
     infinite_lights = List.filter_map infinite_of_light all_lights;
   }
 
-let first_primitive_intersection (scene : t) (ray : Ray.t) :
+let first_primitive_intersection ~(scene : t) ~(ray : Ray.t) :
     Primitive.intersection option =
   let cmp (i : Primitive.intersection option)
       (i' : Primitive.intersection option) =
@@ -39,21 +39,20 @@ let first_primitive_intersection (scene : t) (ray : Ray.t) :
     | Some pi, Some pi' -> if pi.time < pi'.time then Some pi else Some pi'
   in
   let prim_ints =
-    scene.primitives |> List.map (Primitive.get_intersection ray)
+    scene.primitives
+    |> List.map (fun p -> Primitive.get_intersection ~ray ~primitive:p)
   in
   prim_ints |> List.fold_left cmp None
 
-let is_shadowed (scene : t) (int : Primitive.intersection)
-    (sample : light_sample) =
-  let shadow_int =
-    first_primitive_intersection scene
-      (Ray.create
-         ~origin:(int.si.point +@ (sample.wi *@ eps))
-         ~dir:sample.wi)
+let is_shadowed ~(scene : t) ~(int : Primitive.intersection)
+    ~(sample : light_sample) =
+  let shadow_ray =
+    Ray.create ~origin:(int.si.point +@ (sample.wi *@ eps)) ~dir:sample.wi
   in
+  let shadow_int = first_primitive_intersection ~scene ~ray:shadow_ray in
   match shadow_int with
   | None -> false
   | Some { si; _ } ->
       let dist = Vec3.mag (si.point -@ int.si.point) in
-      dist +. 2.0*.eps
+      dist +. (2.0 *. eps)
       < sample.light_dist (* this epsilon should be larger than the one above *)

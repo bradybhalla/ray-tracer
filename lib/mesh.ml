@@ -56,15 +56,18 @@ let of_file (filename : string) =
     faces = fs;
   }
 
-let to_shapes (mesh : t) : Shape.t list =
+let to_shapes ?(scale = 1.0) (mesh : t) : Shape.t list =
+  let t = [ Transform.Scale (Vec3.create scale scale scale) ] in
   let face_to_triangle ((f0, f1, f2) : f) =
-    Shape.create
-      (TriangleParams
-         {
-           p0 = mesh.vertices.(f0.vi - 1) *@ 100.0;
-           (* TODO: my onshape files are in meters *)
-           p1 = mesh.vertices.(f1.vi - 1) *@ 100.0;
-           p2 = mesh.vertices.(f2.vi - 1) *@ 100.0;
-         })
+    Shape.transform
+      ~shape:
+        (Shape.create
+           (TriangleParams
+              {
+                p0 = mesh.vertices.(f0.vi - 1);
+                p1 = mesh.vertices.(f1.vi - 1);
+                p2 = mesh.vertices.(f2.vi - 1);
+              }))
+      ~tr:t
   in
   List.map face_to_triangle mesh.faces

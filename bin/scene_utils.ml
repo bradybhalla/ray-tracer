@@ -21,7 +21,8 @@ let tex_grad nu nv =
               let v = float_of_int c /. float_of_int nv in
               Vec3.create u v (1.0 -. (u *. v)))) )
 
-let tex_earth = Ppm.of_file "textures/earth.ppm" `P6 |> Ppm.to_texture
+let tex_earth =
+  Ppm.of_file ~filename:"textures/earth.ppm" ~mode:`P6 |> Ppm.to_texture
 
 (* generate materials from names *)
 let mc =
@@ -39,7 +40,7 @@ let mc =
   | `Earth -> Diffuse { tex = tex_earth }
 
 let ( % ) (prim : Primitive.t) tr =
-  { prim with shape = Shape.transform prim.shape tr }
+  { prim with shape = Shape.transform ~tr ~shape:prim.shape }
 
 (* build primitives *)
 let sphere_at v r mat : Primitive.t =

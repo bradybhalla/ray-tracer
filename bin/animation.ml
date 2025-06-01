@@ -23,5 +23,7 @@ let () =
   let indices = List.init n Fun.id in
   List.iter
     (fun i ->
-      render n i |> Ppm.save (Printf.sprintf "animation/frame_%05d.ppm" i))
+      Ppm.save
+        ~filename:(Printf.sprintf "animation/frame_%05d.ppm" i)
+        ~ppm:(render n i))
     indices

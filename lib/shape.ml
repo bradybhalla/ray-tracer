@@ -14,21 +14,20 @@ let create (p : params) =
   | PlaneParams p -> Plane (Plane.create p)
   | TriangleParams p -> Triangle (Triangle.create p)
 
-let intersect (s : t) ray =
-  match s with
+let intersect ~(shape : t) ~ray =
+  match shape with
   | Sphere v -> Sphere.intersect v ray
   | Plane v -> Plane.intersect v ray
   | Triangle v -> Triangle.intersect v ray
 
-let transform (s : t) (tr : Transform.t) : t =
-  match s with
+let transform ~shape ~tr : t =
+  match shape with
   | Sphere v -> Sphere (Sphere.transform v tr)
   | Plane v -> Plane (Plane.transform v tr)
   | Triangle v -> Triangle (Triangle.transform v tr)
 
-let sample_point (s : t) : Vec3.t =
-  match s with
+let sample_point (shape : t) : Vec3.t =
+  match shape with
   | Sphere v -> Sphere.sample_point v
   | Triangle v -> Triangle.sample_point v
-  | Plane _ -> failwith "not implemented yet"
-
+  | Plane _ -> failwith "cannot sample from infinite shape"

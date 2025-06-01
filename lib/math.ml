@@ -11,10 +11,10 @@ let solve_quadratic a b c =
     let t1, t2 = (min t1 t2, max t1 t2) in
     Some (t1, t2)
 
-let clamp minv maxv v = v |> min maxv |> max minv
+let clamp ~minv ~maxv v = v |> min maxv |> max minv
 
-let safe_clamp minv maxv v =
-  let res = clamp minv maxv v in
+let safe_clamp ~minv ~maxv v =
+  let res = clamp ~minv ~maxv v in
   if abs_float (v -. res) > eps then
     failwith (Printf.sprintf "%f cannot be safely clamped to %f" v res)
   else res
@@ -52,7 +52,7 @@ module Vec3 = struct
     if mag_sq perp > 1.0 then reflect v n (* Total Internal Reflection *)
     else
       let parallel =
-        cmul n (-.sqrt (1.0 -. mag_sq perp |> safe_clamp 0.0 1.0))
+        cmul n (-.sqrt (1.0 -. mag_sq perp |> safe_clamp ~minv:0.0 ~maxv:1.0))
       in
       add perp parallel
 

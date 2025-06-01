@@ -15,8 +15,9 @@ type intersection = {
   prim : t;
 }
 
-let get_intersection (ray : Ray.t) (prim : t) =
-  let shape_int = Shape.intersect prim.shape ray in
+let get_intersection ~(ray : Ray.t) ~(primitive : t) =
+  let shape_int = Shape.intersect ~shape:primitive.shape ~ray in
   match shape_int with
   | None -> None
-  | Some (t, si) -> Some { time = t; si; prim; wo = ray.dir *@ -1.0 }
+  | Some (t, si) ->
+      Some { time = t; si; prim = primitive; wo = ray.dir *@ -1.0 }

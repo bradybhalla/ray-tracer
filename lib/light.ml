@@ -16,7 +16,7 @@ type t =
 (* TODO: make this an option *)
 let infinite_time = 999999.0
 
-let sample_Li (light : t) (si : shape_intersection) =
+let sample_Li ~(light : t) ~(si : shape_intersection) =
   let sample_from_point light_point color_at_light =
     let point_to_light = light_point -@ si.point in
     let wi = Vec3.normalize point_to_light in
@@ -36,10 +36,9 @@ let sample_Li (light : t) (si : shape_intersection) =
       sample_from_point light_pos (Texture.eval brightness si.tex_coord)
   | Point { pos; brightness } -> sample_from_point pos brightness
 
-let get_Le (light : infinite_light) (ray : Ray.t) =
-  match light with
-  | Environment b -> b
+let get_Le ~(light : infinite_light) ~(ray : Ray.t) =
+  match light with Environment b -> b
 
 (* TODO: should depend on ray direction *)
-let get_L (light : geometric_light) (si : shape_intersection) =
+let get_L ~(light : geometric_light) ~(si : shape_intersection) =
   Texture.eval light.brightness si.tex_coord
