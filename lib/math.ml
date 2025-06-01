@@ -1,3 +1,5 @@
+let eps = 0.00001
+
 let solve_quadratic a b c =
   let sgnb = if b < 0.0 then -1.0 else 1.0 in
   let discriminant = (b *. b) -. (4.0 *. a *. c) in
@@ -13,7 +15,7 @@ let clamp minv maxv v = v |> min maxv |> max minv
 
 let safe_clamp minv maxv v =
   let res = clamp minv maxv v in
-  if abs_float (v -. res) > 0.001 then
+  if abs_float (v -. res) > eps then
     failwith (Printf.sprintf "%f cannot be safely clamped to %f" v res)
   else res
 
@@ -44,16 +46,15 @@ module Vec3 = struct
     let scaled_normal = cmul n (2.0 *. dot_product) in
     sub v scaled_normal
 
-  (* TODO current problem: this is getting called when it shouldn't *)
-  (* ray enters sphere normally, but does not exit without breaking *)
-  (* I think it is because a warped sphere can have TIR, need to handle this case *)
   let refract v n eta_i_div_eta_t =
     let cos_t = -.dot v n in
     let perp = cmul (add v (cmul n cos_t)) eta_i_div_eta_t in
-    let parallel =
-      cmul n (-.sqrt (1.0 -. (mag_sq perp |> safe_clamp 0.0 1.0)))
-    in
-    add perp parallel
+    if mag_sq perp > 1.0 then reflect v n (* Total Internal Reflection *)
+    else
+      let parallel =
+        cmul n (-.sqrt (1.0 -. mag_sq perp |> safe_clamp 0.0 1.0))
+      in
+      add perp parallel
 
   let cross u v =
     {
@@ -63,7 +64,6 @@ module Vec3 = struct
     }
 
   let is_close v1 v2 =
-    let eps = 0.0001 in
     abs_float (v1.x -. v2.x) < eps
     && abs_float (v1.y -. v2.y) < eps
     && abs_float (v1.z -. v2.z) < eps

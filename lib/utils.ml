@@ -31,13 +31,13 @@ module Ray = struct
 
   let reflect (ray : t) (si : shape_intersection) =
     {
-      origin = si.point +@ (si.normal *@ 0.001);
+      origin = si.point +@ (si.normal *@ eps);
       dir = Vec3.reflect ray.dir si.normal;
     }
 
   let refract (ray : t) (si : shape_intersection) mspec mtrans =
     {
-      origin = si.point +@ (si.normal *@ -0.01);
+      origin = si.point +@ (si.normal *@ -.eps);
       dir =
         Vec3.refract ray.dir si.normal
           (Medium.get_incident mspec mtrans

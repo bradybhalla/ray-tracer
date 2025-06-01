@@ -32,8 +32,7 @@ let mc =
   | `Blue -> Diffuse { tex = tex_blue }
   | `White -> Diffuse { tex = tex_white }
   | `Black -> Diffuse { tex = tex_black }
-  | `Checkerboard (nu, nv) ->
-      Diffuse { tex = tex_checker nu nv }
+  | `Checkerboard (nu, nv) -> Diffuse { tex = tex_checker nu nv }
   | `Gradient (nu, nv) -> Diffuse { tex = tex_grad nu nv }
   | `Mirror -> Mirror
   | `Glass -> Glass
@@ -102,6 +101,6 @@ let triangle_light_at pos r power : Primitive.t =
       Some
         {
           shape;
-          brightness = Texture.Constant (Vec3.create 1.0 0.0 0.0 *@ power);
+          brightness = Texture.Constant (Vec3.create 1.0 1.0 1.0 *@ power);
         };
   }

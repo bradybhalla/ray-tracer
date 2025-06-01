@@ -1,6 +1,7 @@
 open Math
 open Utils
 
+(* TODO: ideally would just use the primitive's shape *)
 type geometric_light = { shape : Shape.t; brightness : Texture.t }
 
 type infinite_light =

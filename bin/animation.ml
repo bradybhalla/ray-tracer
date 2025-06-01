@@ -3,7 +3,7 @@ open Whitted_tracer
 open Random_walk_tracer
 
 (* let create_scene = Scenes.globe 300 *)
-let create_scene = Scenes.lens 150
+let create_scene = Scenes.lens 50
 (* let create_scene = Scenes.room 300 *)
 (* let create_scene = Scenes.three_spheres 300 *)
 (* let create_scene = Scenes.onshape 300 *)
@@ -13,7 +13,7 @@ let render n i =
   print_newline ();
   Render.create
     ~scene:(create_scene (float_of_int i /. float_of_int n))
-    ~params:{ samples_per_pixel = 10; num_domains = 5 }
+    ~params:{ samples_per_pixel = 300; num_domains = 5 }
     ~tracer:random_walk
   |> Ppm.of_render
 

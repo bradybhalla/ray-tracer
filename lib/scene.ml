@@ -48,12 +48,12 @@ let is_shadowed (scene : t) (int : Primitive.intersection)
   let shadow_int =
     first_primitive_intersection scene
       (Ray.create
-         ~origin:(int.si.point +@ (sample.wi *@ 0.00001))
+         ~origin:(int.si.point +@ (sample.wi *@ eps))
          ~dir:sample.wi)
   in
   match shadow_int with
   | None -> false
   | Some { si; _ } ->
       let dist = Vec3.mag (si.point -@ int.si.point) in
-      dist +. 0.001
+      dist +. 2.0*.eps
       < sample.light_dist (* this epsilon should be larger than the one above *)

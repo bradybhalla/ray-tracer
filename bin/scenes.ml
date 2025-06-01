@@ -7,22 +7,19 @@ open Ray_tracer.Scene
 
 let lens pixel_height t =
   let t = 2.0 *. Float.pi *. t in
-  let tr1 =
-    [
-      Scale (Vec3.create 1.0 0.6 1.0);
-      Translation (Vec3.create 0.0 (-.0.2 +. sin t) 0.0);
-    ]
+  let tr = [Translation (Vec3.create 0.0 (-.0.25 +. sin t) 0.0)] in
+  let sc = [ Scale (Vec3.create 2.0 0.3 2.0) ]
   in
   Scene.create
     ~camera:
-      (Camera.create ~pos:(Vec3.create (-1.0) (-1.0) (-4.0)) ~pixel_height ())
+      (Camera.create ~pos:(Vec3.create (0.0) (-2.0) (-6.0)) ~pixel_height ())
     ~primitives:
       [
-        sphere_on_y1 0.0 0.0 `Glass 1.0 % tr1;
-        ground (`Checkerboard (2, 2)) 4.0;
-        triangle_light_at (Vec3.create 333.0 (300.0) 0.0) 3.0 1.0;
+        sphere_on_y1 0.0 0.0 `Glass 1.0 % sc % tr;
+        ground (`Checkerboard (2, 2)) 1.0;
+        triangle_light_at (Vec3.create 1.5 (-2.0) 0.0) 3.0 20.0 % tr;
       ]
-    ~external_lights:[ Infinite (Environment (Vec3.create 0.0 0.1 0.1))]
+    ~external_lights:[ Infinite (Environment (Vec3.create 0.2 0.2 0.2))]
 
 let three_spheres pixel_height t =
   let t = 2.0 *. Float.pi *. t in

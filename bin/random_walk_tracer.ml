@@ -22,7 +22,7 @@ let bsdf wo wi normal =
 
 let random_walk (scene : Scene.t) (initial_ray : Ray.t) =
   let rec helper (ray : Ray.t) max_depth =
-    if max_depth <= 0 then Vec3.create 1.0 0.0 1.0
+    if max_depth <= 0 then Vec3.create 0.0 0.0 0.0
     else
       match Scene.first_primitive_intersection scene ray with
       | None ->
@@ -39,7 +39,7 @@ let random_walk (scene : Scene.t) (initial_ray : Ray.t) =
               if fcos = 0.0 then get_emitted_color int
               else
                 let ray' =
-                  Ray.create ~origin:(int.si.point +@ (wi *@ 0.001)) ~dir:wi
+                  Ray.create ~origin:(int.si.point +@ (wi *@ eps)) ~dir:wi
                 in
                 let li = helper ray' (max_depth - 1) in
                 get_emitted_color int
@@ -53,4 +53,4 @@ let random_walk (scene : Scene.t) (initial_ray : Ray.t) =
               in
               helper ray' (max_depth - 1) +@ get_emitted_color int )
   in
-  helper initial_ray 5
+  helper initial_ray 15
