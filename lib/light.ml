@@ -29,7 +29,7 @@ let sample_Li ~(light : t) ~(prim_si : shape_intersection) =
       let wi = Sample.unit_vec3 () in
       { brightness_at_light = brightness; wi; light_dist = None }
   | Geometric { shape; brightness } ->
-      let light_shape_sample = Shape.sample shape in
+      let light_shape_sample = Shape.sample ~shape ~from:prim_si.point in
       sample_from_point light_shape_sample.point
         (Texture.eval brightness light_shape_sample.tex_coord)
   | Point { pos; brightness } -> sample_from_point pos brightness

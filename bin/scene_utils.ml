@@ -2,10 +2,10 @@ open Ray_tracer.Math
 open Ray_tracer
 
 (* define textures *)
-let tex_red = Texture.Constant (Vec3.create 0.8 0.2 0.2)
-let tex_green = Texture.Constant (Vec3.create 0.2 0.8 0.2)
-let tex_blue = Texture.Constant (Vec3.create 0.2 0.2 0.8)
-let tex_white = Texture.Constant (Vec3.create 0.6 0.6 0.6)
+let tex_red = Texture.Constant (Vec3.create 0.8 0.3 0.3)
+let tex_green = Texture.Constant (Vec3.create 0.3 0.8 0.3)
+let tex_blue = Texture.Constant (Vec3.create 0.3 0.3 0.8)
+let tex_white = Texture.Constant (Vec3.create 0.8 0.8 0.8)
 let tex_black = Texture.Constant (Vec3.create 0.1 0.1 0.1)
 
 let tex_checker nu nv =

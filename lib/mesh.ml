@@ -1,5 +1,4 @@
 open Math
-open Utils
 
 type face_vertex = { vi : int; ti : int option; ni : int option }
 type v = Vec3.t

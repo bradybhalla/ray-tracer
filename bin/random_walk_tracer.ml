@@ -55,4 +55,5 @@ let rec random_walk ~(scene : Scene.t) ~(ray : Ray.t) ~max_depth =
               Ray.refract ray int.si int.prim.medium int.si.medium_transition
             in
             random_walk ~scene ~ray:ray' ~max_depth:(max_depth - 1)
-            +@ get_emitted_color int)
+            +@ get_emitted_color int
+        | BSDF bsdf -> failwith "TODO")

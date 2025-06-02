@@ -37,16 +37,24 @@ module Vec3 = struct
   let mag v = sqrt (dot v v)
   let mag_sq v = dot v v
 
+  let assert_unit v = ignore (safe_clamp ~minv:1.0 ~maxv:1.0 (mag_sq v))
+
   let normalize v =
     let len = sqrt (dot v v) in
     if len = 0.0 then v else cdiv v len
 
+  (* normal should be opposite to the incoming direction v  *)
   let reflect v n =
+    assert_unit v;
+    assert_unit n;
     let dot_product = dot v n in
     let scaled_normal = cmul n (2.0 *. dot_product) in
     sub v scaled_normal
 
+  (* normal should be opposite to the incoming direction v  *)
   let refract v n eta_i_div_eta_t =
+    assert_unit v;
+    assert_unit n;
     let cos_t = -.dot v n in
     let perp = cmul (add v (cmul n cos_t)) eta_i_div_eta_t in
     if mag_sq perp > 1.0 then reflect v n (* Total Internal Reflection *)

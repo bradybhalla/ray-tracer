@@ -81,7 +81,7 @@ let intersect (triangle : t) (ray : Ray.t) =
           ( t,
             {
               point = intersect_point;
-              normal = outward_normal;
+              outward_normal;
               tex_coord = { u = 0.0; v = 0.0 };
               medium_transition = Out2Out;
             } )
@@ -94,12 +94,18 @@ let transform (triangle : t) tr =
       p2 = Transform.point tr triangle.p2;
     }
 
-let sample (triangle : t) : shape_sample =
+let sample (triangle : t) (from : Vec3.t) : shape_sample =
   let a = Sample.float 1.0 in
   let b = Sample.float 1.0 in
   let c = 1.0 -. a -. b in
+  let point = point_from_bary triangle a b c in
   {
-    point = point_from_bary triangle a b c;
-    normal = triangle.normal;
+    point;
+    (* two sided shape should have outward normal facing point *)
+    (* this means the vector from `from` to `point` should point opposite to the normal *)
+    outward_normal =
+      (if Vec3.dot (point -@ from) triangle.normal > 0.0 then
+         triangle.normal *@ -1.0
+       else triangle.normal);
     tex_coord = tex_from_bary triangle a b c;
   }

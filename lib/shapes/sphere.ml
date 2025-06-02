@@ -45,17 +45,17 @@ let intersection_of_times (s : t) ray (t1, t2) =
       ( t1,
         {
           point = Ray.at ray t1;
-          normal = Ray.at ray t1 -@ s.pos |> Vec3.normalize;
+          outward_normal = Ray.at ray t1 -@ s.pos |> Vec3.normalize;
           tex_coord = tex_coord_of_point s (Ray.at ray t1);
           medium_transition = Out2In;
         } )
   else
-    (* inside sphere (t2 is min positive), flip normal *)
+    (* inside sphere (t2 is min positive) *)
     Some
       ( t2,
         {
           point = Ray.at ray t2;
-          normal = s.pos -@ Ray.at ray t2 |> Vec3.normalize;
+          outward_normal = Ray.at ray t2 -@ s.pos |> Vec3.normalize;
           tex_coord = tex_coord_of_point s (Ray.at ray t2);
           medium_transition = In2Out;
         } )
@@ -78,7 +78,7 @@ let transform s tr =
   let inv_transform = Transform.inv transform in
   { s with transform; inv_transform }
 
-let sample s =
+let sample s _ =
   let { pos; radius; transform; _ } = s in
   let dir = Sample.unit_vec3 () in
   let point = pos +@ (dir *@ radius) in
@@ -86,6 +86,6 @@ let sample s =
   let tex = tex_coord_of_point s point in
   {
     point = point |> Transform.point transform;
-    normal = normal |> Transform.normal transform;
+    outward_normal = normal |> Transform.normal transform;
     tex_coord = tex;
   }

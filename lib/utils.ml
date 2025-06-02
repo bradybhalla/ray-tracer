@@ -4,11 +4,15 @@ let ( >>= ) = Option.bind
 let ( =<< ) f x = x >>= f
 let lift f = Fun.compose Option.some f
 
+(* right now assumes all shapes are two sided *)
 type shape_intersection = {
   point : Vec3.t;
-  normal : Vec3.t;
+  outward_normal : Vec3.t;
   tex_coord : Texture.tex_coord;
   medium_transition : Medium.transition;
+      (* local basis *)
+      (* du: Vec3.t; *)
+      (* dv: Vec3.t; *)
 }
 
 (* light sample from a point *)
@@ -25,7 +29,7 @@ type light_sample = {
 (* shape sample *)
 type shape_sample = {
   point : Vec3.t;
-  normal : Vec3.t;
+  outward_normal : Vec3.t;
   tex_coord : Texture.tex_coord;
 }
 
@@ -37,18 +41,23 @@ module Ray = struct
   let at ray time = ray.origin +@ (ray.dir *@ time)
 
   let reflect (ray : t) (si : shape_intersection) =
-    {
-      origin = si.point +@ (si.normal *@ eps);
-      dir = Vec3.reflect ray.dir si.normal;
-    }
+    let normal =
+      Medium.ray_side_normal ~transition:si.medium_transition
+        ~outward_normal:si.outward_normal
+    in
+    { origin = si.point +@ (normal *@ eps); dir = Vec3.reflect ray.dir normal }
 
   let refract (ray : t) (si : shape_intersection) mspec mtrans =
+    let normal =
+      Medium.ray_side_normal ~transition:si.medium_transition
+        ~outward_normal:si.outward_normal
+    in
     {
-      origin = si.point +@ (si.normal *@ -.eps);
+      origin = si.point +@ (normal *@ -.eps);
       dir =
-        Vec3.refract ray.dir si.normal
-          (Medium.get_incident mspec mtrans
-          /. Medium.get_transmitted mspec mtrans);
+        Vec3.refract ray.dir normal
+          (Medium.get_incident ~spec:mspec ~transition:mtrans
+          /. Medium.get_transmitted ~spec:mspec ~transition:mtrans);
     }
 end
 

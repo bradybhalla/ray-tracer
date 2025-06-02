@@ -3,6 +3,25 @@ open Ray_tracer.Math
 open Ray_tracer.Transform
 open Scene_utils
 
+let materials pixel_height _ =
+  Scene.create
+    ~camera:
+      (Camera.create
+         {
+           Camera.default_params with
+           pos = Vec3.create 0.0 (-1.0) (-8.0);
+           look_at = Vec3.create 0.0 (-1.0) 0.0;
+           pixel_height;
+         })
+    ~primitives:
+      [
+        sphere_on_y1 (-5.0) 0.0 (`Checkerboard (9, 22)) 2.0;
+        sphere_on_y1 0.0 0.0 `White 2.0;
+        sphere_on_y1 5.0 0.0 `Red 2.0;
+        ground `White 1.0;
+      ]
+    ~external_lights:[ Infinite (Environment (Vec3.create 2.0 2.0 2.0)) ]
+
 let lens pixel_height t =
   let t = 2.0 *. Float.pi *. t in
   let tr = [ Translation (Vec3.create 0.0 (-0.25 +. sin t) 0.0) ] in
@@ -11,9 +30,9 @@ let lens pixel_height t =
     ~camera:
       (Camera.create
          {
-           pos = Some (Vec3.create 0.0 (-2.0) (-6.0));
+           Camera.default_params with
+           pos = Vec3.create 0.0 (-2.0) (-6.0);
            pixel_height;
-           look_at = None;
          })
     ~primitives:
       [
@@ -36,9 +55,9 @@ let three_spheres pixel_height t =
     ~camera:
       (Camera.create
          {
-           pos = Some (Vec3.create (-1.0) (-1.0) (-4.0));
+           Camera.default_params with
+           pos = Vec3.create (-1.0) (-1.0) (-4.0);
            pixel_height;
-           look_at = None;
          })
     ~primitives:
       [
@@ -56,9 +75,9 @@ let room pixel_height _ =
     ~camera:
       (Camera.create
          {
-           pos = Some (Vec3.create 0.0 1.0 (-4.0));
+           Camera.default_params with
+           pos = Vec3.create 0.0 1.0 (-4.0);
            pixel_height;
-           look_at = None;
          })
     ~primitives:
       [
@@ -82,9 +101,9 @@ let globe pixel_height t =
     ~camera:
       (Camera.create
          {
-           pos = Some (Vec3.create (-10.0 *. sin t) 0.0 (-10.0 *. cos t));
+           Camera.default_params with
+           pos = Vec3.create (-10.0 *. sin t) 0.0 (-10.0 *. cos t);
            pixel_height;
-           look_at = None;
          })
     ~primitives:
       [
@@ -121,9 +140,9 @@ let onshape pixel_height =
       ~camera:
         (Camera.create
            {
-             pos = Some (Vec3.create 0.0 (-2.0) (-10.0));
+             Camera.default_params with
+             pos = Vec3.create 0.0 (-2.0) (-10.0);
              pixel_height;
-             look_at = None;
            })
       ~primitives:
         (List.map

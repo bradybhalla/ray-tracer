@@ -1,5 +1,6 @@
 open Shapes
 open Utils
+open Math
 
 type t = Sphere of Sphere.t | Plane of Plane.t | Triangle of Triangle.t
 
@@ -26,8 +27,8 @@ let transform ~shape ~tr : t =
   | Plane v -> Plane (Plane.transform v tr)
   | Triangle v -> Triangle (Triangle.transform v tr)
 
-let sample (shape : t) : shape_sample =
+let sample ~(shape : t) ~(from : Vec3.t) : shape_sample =
   match shape with
-  | Sphere v -> Sphere.sample v
-  | Triangle v -> Triangle.sample v
+  | Sphere v -> Sphere.sample v from
+  | Triangle v -> Triangle.sample v from
   | Plane _ -> failwith "cannot sample from infinite shape"

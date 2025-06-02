@@ -14,7 +14,9 @@ let get_diffuse_color scene int light tex =
           sample.brightness_at_light /@ Float.pow d 2.0 (* attenuated light *)
       | None -> sample.brightness_at_light (* infinite light (no attenuation) *)
     in
-    brightness *@ (Vec3.dot sample.wi int.si.normal |> max 0.0) *@@ color
+    brightness
+    *@ (Vec3.dot sample.wi int.si.outward_normal |> max 0.0)
+    *@@ color
 
 let get_emitted_color light_int =
   Option.fold ~none:(Vec3.zero ())
@@ -45,4 +47,10 @@ let rec whitted ~(scene : Scene.t) ~(ray : Ray.t) ~max_depth =
               Ray.refract ray int.si int.prim.medium int.si.medium_transition
             in
             whitted ~scene ~ray:ray' ~max_depth:(max_depth - 1)
+            +@ get_emitted_color int
+        | BSDF _ ->
+            let tex = Texture.Constant (Vec3.create 1.0 0.0 1.0) in
+            sum_over
+              (fun l -> get_diffuse_color scene int l tex)
+              scene.all_lights
             +@ get_emitted_color int)

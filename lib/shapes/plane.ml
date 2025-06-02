@@ -44,12 +44,13 @@ let intersect { normal; pos; udir; vdir } (ray : Ray.t) =
       (* intersection is negative *)
       None
     else
+      (* outward normal always faces the ray since the material is two sided *)
       let flip_normal = Vec3.dot ray.dir normal > 0.0 in
       Some
         ( t,
           {
             point = Ray.at ray t;
-            normal = (if not flip_normal then normal else normal *@ -1.0);
+            outward_normal = (if not flip_normal then normal else normal *@ -1.0);
             tex_coord =
               (let proj_pos = Ray.at ray t -@ pos in
                {

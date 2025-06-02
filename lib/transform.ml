@@ -14,10 +14,6 @@ type single =
   | Scale of Vec3.t
 
 (* items on the left get applied first *)
-(* TODO: storing as a list is nice for doing calculations easily,
-           but a matrix could be more efficient if there are multiple
-           transformations
-   *)
 type t = single list
 
 let identity = []
@@ -75,7 +71,7 @@ let ray (transform : t) (ray : Ray.t) : Ray.t =
 let shape_intersection transform (si : shape_intersection) =
   {
     point = point transform si.point;
-    normal = normal transform si.normal;
+    outward_normal = normal transform si.outward_normal;
     tex_coord = si.tex_coord;
     medium_transition = si.medium_transition;
   }
