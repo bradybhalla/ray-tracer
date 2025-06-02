@@ -1,6 +1,6 @@
 let eps = 0.00001
 
-let solve_quadratic a b c =
+let solve_quadratic ~a ~b ~c =
   let sgnb = if b < 0.0 then -1.0 else 1.0 in
   let discriminant = (b *. b) -. (4.0 *. a *. c) in
   if discriminant < 0.0 then None
@@ -76,17 +76,12 @@ let ( *@ ) = Vec3.cmul
 let ( /@ ) = Vec3.cdiv
 
 module Sample = struct
-  (* TODO: not correct sampling *)
-  let unit_vec3 () =
-    let v =
-      Vec3.create (Random.float 1.0) (Random.float 1.0) (Random.float 1.0)
-    in
-    let v = v -@ Vec3.create 0.5 0.5 0.5 in
-    Vec3.normalize v
+  let float bound = Random.float bound
 
-  let rec hemisphere_unit_vec3 normal =
-    let v = unit_vec3 () in
-    if Vec3.dot v normal >= 0.0 then v else hemisphere_unit_vec3 normal
+  (* float between -1 and 1 *)
+  let sfloat () = Random.float 2.0 -. 1.0
 
-  let float () = Random.float 1.0
+  let rec unit_vec3 () =
+    let v = Vec3.create (sfloat ()) (sfloat ()) (sfloat ()) in
+    if Vec3.mag_sq v <= 1.0 then Vec3.normalize v else unit_vec3 ()
 end

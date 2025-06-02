@@ -13,7 +13,7 @@ type t = {
 let default_max_val = 255
 let gamma_correction = 1.0 /. 2.2
 
-let to_string ~(ppm : t) ~(mode : [ `P3 ]) =
+let to_string ~(ppm : t) =
   let header =
     Printf.sprintf "P3\n%d %d\n%d\n" ppm.width ppm.height ppm.max_color_value
   in
@@ -28,11 +28,11 @@ let of_render (render : Render.t) =
     int_of_float
       (Float.pow color gamma_correction *. float_of_int default_max_val)
   in
-  let `Col width, `Row height = Render.get_dim render in
+  let width, height = Render.get_dim render in
   let data =
     List.init height (fun y ->
         List.init width (fun x ->
-            let color = Render.get_pixel_color render (`Col x) (`Row y) in
+            let color = Render.get_pixel_color ~render ~col:x ~row:y in
             (val_of_color color.x, val_of_color color.y, val_of_color color.z)))
   in
   { width; height; max_color_value = default_max_val; data }
@@ -58,7 +58,7 @@ let to_texture (ppm : t) : Texture.t =
     ppm.data;
   Image (rows, cols, data)
 
-let of_file ~(filename : string) ~(mode : [ `P6 ]) : t =
+let of_file ~(filename : string) : t =
   let chan = open_in_bin filename in
   let read_rgb () =
     let r = input_byte chan in
@@ -89,9 +89,9 @@ let of_file ~(filename : string) ~(mode : [ `P6 ]) : t =
   close_in chan;
   { max_color_value; width; height; data }
 
-let print (ppm : t) = to_string ~ppm ~mode:`P3 |> print_string
+let print (ppm : t) = to_string ~ppm |> print_string
 
 let save ~(filename : string) ~(ppm : t) =
   let oc = open_out filename in
-  to_string ~ppm ~mode:`P3 |> output_string oc;
+  to_string ~ppm |> output_string oc;
   close_out oc

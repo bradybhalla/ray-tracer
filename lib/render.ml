@@ -2,9 +2,8 @@ open Math
 open Utils
 module T = Domainslib.Task
 
-(* TODO: add max depth to params *)
-type params = { samples_per_pixel : int; num_domains : int }
-type tracer = scene:Scene.t -> ray:Ray.t -> Vec3.t
+type params = { samples_per_pixel : int; max_depth : int }
+type tracer = scene:Scene.t -> ray:Ray.t -> max_depth:int -> Vec3.t
 
 (* pixel color is stored as a sum of all samples and the number of samples *)
 (* sum of all samples and the number of samples *)
@@ -13,7 +12,7 @@ type pixel_info = { weighted_color_sum : Vec3.t; sum_weights : float }
 (* the full render *)
 type t = { data : pixel_info array array; width : int; height : int }
 
-let get_dim (render : t) = (`Col render.width, `Row render.height)
+let get_dim (render : t) = (render.width, render.height)
 let empty width = { data = [||]; width; height = 0 }
 
 let hstack r1 r2 =
@@ -45,43 +44,42 @@ let create_section ~(scene : Scene.t) ~params ~tracer ~width ~start_row ~end_row
   for y = 0 to height - 1 do
     for x = 0 to width - 1 do
       for _ = 1 to params.samples_per_pixel do
-        let ray = Camera.get_ray scene.camera ~col:x ~row:(start_row + y) in
-        let color = tracer ~scene ~ray in
+        let ray =
+          Camera.get_ray ~camera:scene.camera ~col:x ~row:(start_row + y)
+        in
+        let color = tracer ~scene ~ray ~max_depth:params.max_depth in
         update_with_sample data ~col:x ~row:y color
       done
     done
   done;
   { data; width; height }
 
-(* TODO: probably setup and teardown pool in main function instead of here *)
-let create ~(scene : Scene.t) ~(params : params) ~(tracer : tracer) : t =
+let create ~(scene : Scene.t) ~(params : params) ~(tracer : tracer)
+    ~(pool : T.pool) : t =
   let width, height = Camera.get_pixel_dim scene.camera in
-  let pool = T.setup_pool ~num_domains:0 () in
-  let res =
-    T.run pool (fun _ ->
-        (* split into sections ~20 pixels tall *)
-        let num_sections = height / 20 in
-        let bounds =
-          Array.init (num_sections + 1) (fun i -> height * i / num_sections)
-        in
-        (* async create each section *)
-        let sections =
-          List.init num_sections (fun i ->
-              let low = bounds.(i) in
-              let high = bounds.(i + 1) in
-              T.async pool (fun _ ->
-                  create_section ~scene ~params ~tracer ~width ~start_row:low
-                    ~end_row:high))
-        in
-        (* await and combine all sections *)
-        List.fold_left
-          (fun acc a -> hstack acc (T.await pool a))
-          (empty width) sections)
+  let main _ =
+    (* split into sections ~20 pixels tall *)
+    let num_sections = height / 20 in
+    let bounds =
+      Array.init (num_sections + 1) (fun i -> height * i / num_sections)
+    in
+    (* async create each section *)
+    let sections =
+      List.init num_sections (fun i ->
+          let low = bounds.(i) in
+          let high = bounds.(i + 1) in
+          T.async pool (fun _ ->
+              create_section ~scene ~params ~tracer ~width ~start_row:low
+                ~end_row:high))
+    in
+    (* await and combine all sections *)
+    List.fold_left
+      (fun acc a -> hstack acc (T.await pool a))
+      (empty width) sections
   in
-  T.teardown_pool pool;
-  res
+  T.run pool main
 
-let get_pixel_color (render : t) (`Col x) (`Row y) : Vec3.t =
-  let pixel_val = render.data.(y).(x) in
+let get_pixel_color ~(render : t) ~col ~row : Vec3.t =
+  let pixel_val = render.data.(row).(col) in
   pixel_val.weighted_color_sum /@ pixel_val.sum_weights
   |> Vec3.max 0.0 |> Vec3.min 1.0

@@ -1,19 +1,45 @@
 open Math
 open Utils
 
-type t = { p0 : Vec3.t; p1 : Vec3.t; p2 : Vec3.t }
-type params = t
+type t = {
+  p0 : Vec3.t;
+  p1 : Vec3.t;
+  p2 : Vec3.t;
+  tex0 : Texture.tex_coord;
+  tex1 : Texture.tex_coord;
+  tex2 : Texture.tex_coord;
+  normal : Vec3.t;
+  v0 : Vec3.t;
+  v1 : Vec3.t;
+  d00 : float;
+  d01 : float;
+  d11 : float;
+}
 
-let create (triangle : params) : t = triangle
+type params = { p0 : Vec3.t; p1 : Vec3.t; p2 : Vec3.t }
 
-(* TODO: probably inefficient for now *)
-let get_bary { p0 = a; p1 = b; p2 = c } p =
-  let v0 = b -@ a in
-  let v1 = c -@ a in
+let create ({ p0; p1; p2 } : params) : t =
+  let v0 = p1 -@ p0 in
+  let v1 = p2 -@ p0 in
+  {
+    p0;
+    p1;
+    p2;
+    (* TODO: should use interpolated normals and have tex coords *)
+    normal = Vec3.cross v0 v1 |> Vec3.normalize;
+    tex0 = { u = 0.0; v = 0.0 };
+    tex1 = { u = 0.0; v = 0.0 };
+    tex2 = { u = 0.0; v = 0.0 };
+    (* precomputed values for later *)
+    v0;
+    v1;
+    d00 = Vec3.dot v0 v0;
+    d01 = Vec3.dot v0 v1;
+    d11 = Vec3.dot v1 v1;
+  }
+
+let get_bary { p0 = a; v0; v1; d00; d11; d01; _ } p =
   let v2 = p -@ a in
-  let d00 = Vec3.dot v0 v0 in
-  let d01 = Vec3.dot v0 v1 in
-  let d11 = Vec3.dot v1 v1 in
   let d20 = Vec3.dot v2 v0 in
   let d21 = Vec3.dot v2 v1 in
   let denom = (d00 *. d11) -. (d01 *. d01) in
@@ -21,14 +47,18 @@ let get_bary { p0 = a; p1 = b; p2 = c } p =
   let w = ((d00 *. d21) -. (d01 *. d20)) /. denom in
   (v, w, 1.0 -. v -. w)
 
-let point_from_bary { p0; p1; p2 } a b c = (p0 *@ a) +@ (p1 *@ b) +@ (p2 *@ c)
+let point_from_bary ({ p0; p1; p2; _ } : t) a b c =
+  (p0 *@ a) +@ (p1 *@ b) +@ (p2 *@ c)
 
-(* TODO: probably inefficient for now *)
-let intersect triangle (ray : Ray.t) =
-  let { p0; p1; p2 } = triangle in
-  let normal = Vec3.cross (p1 -@ p0) (p2 -@ p0) |> Vec3.normalize in
-  let pos = p0 in
-  let num = Vec3.dot (pos -@ ray.origin) normal in
+let tex_from_bary ({ tex0; tex1; tex2; _ } : t) a b c : Texture.tex_coord =
+  {
+    u = (tex0.u *. a) +. (tex1.u *. b) +. (tex2.u *. c);
+    v = (tex0.v *. a) +. (tex1.v *. b) +. (tex2.v *. c);
+  }
+
+let intersect (triangle : t) (ray : Ray.t) =
+  let ({ p0; normal; _ } : t) = triangle in
+  let num = Vec3.dot (p0 -@ ray.origin) normal in
   let denom = Vec3.dot ray.dir normal in
   if denom = 0.0 then
     (* ray parallel to plane of triangle *)
@@ -56,15 +86,20 @@ let intersect triangle (ray : Ray.t) =
               medium_transition = Out2Out;
             } )
 
-let transform triangle tr =
-  {
-    p0 = Transform.point tr triangle.p0;
-    p1 = Transform.point tr triangle.p1;
-    p2 = Transform.point tr triangle.p2;
-  }
+let transform (triangle : t) tr =
+  create
+    {
+      p0 = Transform.point tr triangle.p0;
+      p1 = Transform.point tr triangle.p1;
+      p2 = Transform.point tr triangle.p2;
+    }
 
-let sample_point triangle =
-  let a = Sample.float () in
-  let b = Sample.float () in
+let sample (triangle : t) : shape_sample =
+  let a = Sample.float 1.0 in
+  let b = Sample.float 1.0 in
   let c = 1.0 -. a -. b in
-  point_from_bary triangle a b c
+  {
+    point = point_from_bary triangle a b c;
+    normal = triangle.normal;
+    tex_coord = tex_from_bary triangle a b c;
+  }

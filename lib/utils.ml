@@ -13,13 +13,20 @@ type shape_intersection = {
 
 (* light sample from a point *)
 type light_sample = {
-  (* attenuated brightness *)
-  brightness_at_point : Vec3.t;
+  (* brightness *)
+  brightness_at_light : Vec3.t;
   (* direction to light *)
   wi : Vec3.t;
   (* dist for a ray to reach light location
      used for shadow rays *)
-  light_dist : float;
+  light_dist : float option;
+}
+
+(* shape sample *)
+type shape_sample = {
+  point : Vec3.t;
+  normal : Vec3.t;
+  tex_coord : Texture.tex_coord;
 }
 
 module Ray = struct

@@ -50,9 +50,11 @@ let is_shadowed ~(scene : t) ~(int : Primitive.intersection)
     Ray.create ~origin:(int.si.point +@ (sample.wi *@ eps)) ~dir:sample.wi
   in
   let shadow_int = first_primitive_intersection ~scene ~ray:shadow_ray in
-  match shadow_int with
-  | None -> false
-  | Some { si; _ } ->
+  match (shadow_int, sample.light_dist) with
+  | None, _ -> false (* no intersection -> no shadow *)
+  | Some _, None -> true (* intersection & infinitely far light -> shadow *)
+  (* otherwise, calculate which is closer *)
+  | Some { si; _ }, Some light_dist ->
       let dist = Vec3.mag (si.point -@ int.si.point) in
       dist +. (2.0 *. eps)
-      < sample.light_dist (* this epsilon should be larger than the one above *)
+      < light_dist (* this epsilon should be larger than the one above *)

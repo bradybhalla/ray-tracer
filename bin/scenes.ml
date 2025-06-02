@@ -51,8 +51,7 @@ let three_spheres pixel_height t =
       ]
     ~external_lights:[]
 
-let room pixel_height t =
-  let v = 1.0 +. (2.0 *. exp (-6.0 *. t)) in
+let room pixel_height _ =
   Scene.create
     ~camera:
       (Camera.create

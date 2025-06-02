@@ -20,7 +20,7 @@ type params = {
 
 let create p =
   let look_at = Option.value ~default:(Vec3.zero ()) p.look_at in
-  let pos = Option.value ~default:(Vec3.create 0.0 0.0 (-10.0)) p.look_at in
+  let pos = Option.value ~default:(Vec3.create 0.0 0.0 (-10.0)) p.pos in
   let ez = look_at -@ pos |> Vec3.normalize in
   let ex = Vec3.cross (Vec3.create 0.0 1.0 0.0) ez |> Vec3.normalize in
   let ey = Vec3.cross ez ex |> Vec3.normalize in
@@ -43,7 +43,7 @@ let get_pixel_dim camera =
   let rows = camera.pixel_height in
   (cols, rows)
 
-let get_ray camera ~col ~row : Ray.t =
+let get_ray ~camera ~col ~row : Ray.t =
   (* dimension of the camera in scene coords if its origin was a distance of 1 away *)
   let virtual_width = camera.aspect_ratio *. 2.0 *. tan (camera.fov /. 2.0) in
   let virtual_height = 2.0 *. tan (camera.fov /. 2.0) in

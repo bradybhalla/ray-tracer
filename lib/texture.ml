@@ -21,7 +21,16 @@ let eval tex tex_coord =
       then c1
       else c2
   | Image (rows, cols, a) ->
-      let r = int_of_float (floor (float_of_int rows *. u)) in
-      let c = int_of_float (floor (float_of_int cols *. v)) in
-      (* TODO: add interpolation *)
-      a.(r).(c)
+      let r_float = float_of_int rows *. u in
+      let c_float = float_of_int cols *. v in
+      let r0 = int_of_float (floor r_float) in
+      let r1 = (r0 + 1) mod rows in
+      let r1_prop = decimal r_float in
+      let c0 = int_of_float (floor c_float) in
+      let c1 = (c0 + 1) mod cols in
+      let c1_prop = decimal c_float in
+      (* bilinear interpolation *)
+      (a.(r0).(c0) *@ ((1.0 -. r1_prop) *. (1.0 -. c1_prop)))
+      +@ (a.(r0).(c1) *@ ((1.0 -. r1_prop) *. c1_prop))
+      +@ (a.(r1).(c0) *@ (r1_prop *. (1.0 -. c1_prop)))
+      +@ (a.(r1).(c1) *@ (r1_prop *. c1_prop))

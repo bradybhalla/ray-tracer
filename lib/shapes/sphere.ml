@@ -33,7 +33,7 @@ let intersect_times ({ pos; radius; _ } : t) (ray : Ray.t) =
   let c =
     Vec3.dot (pos -@ ray.origin) (pos -@ ray.origin) -. (radius *. radius)
   in
-  solve_quadratic a b c
+  solve_quadratic ~a ~b ~c
 
 let intersection_of_times (s : t) ray (t1, t2) =
   if t2 < 0.0 then
@@ -78,6 +78,14 @@ let transform s tr =
   let inv_transform = Transform.inv transform in
   { s with transform; inv_transform }
 
-let sample_point { pos; radius; transform; _ } =
+let sample s =
+  let { pos; radius; transform; _ } = s in
   let dir = Sample.unit_vec3 () in
-  pos +@ (dir *@ radius) |> Transform.point transform
+  let point = pos +@ (dir *@ radius) in
+  let normal = dir in
+  let tex = tex_coord_of_point s point in
+  {
+    point = point |> Transform.point transform;
+    normal = normal |> Transform.normal transform;
+    tex_coord = tex;
+  }
