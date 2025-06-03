@@ -84,6 +84,8 @@ let intersect (triangle : t) (ray : Ray.t) =
               outward_normal;
               tex_coord = { u = 0.0; v = 0.0 };
               medium_transition = Out2Out;
+              (* TODO: should eventually be made smooth over a mesh *)
+              ds = triangle.v0 |> Vec3.normalize;
             } )
 
 let transform (triangle : t) tr =

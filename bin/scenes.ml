@@ -15,9 +15,9 @@ let materials pixel_height _ =
          })
     ~primitives:
       [
-        sphere_on_y1 (-5.0) 0.0 (`Checkerboard (9, 22)) 2.0;
+        (* sphere_on_y1 (-5.0) 0.0 (`Checkerboard (9, 22)) 2.0; *)
         sphere_on_y1 0.0 0.0 `White 2.0;
-        sphere_on_y1 5.0 0.0 `Red 2.0;
+        (* sphere_on_y1 5.0 0.0 `Red 2.0; *)
         ground `White 1.0;
       ]
     ~external_lights:[ Infinite (Environment (Vec3.create 2.0 2.0 2.0)) ]

@@ -7,12 +7,12 @@ let lift f = Fun.compose Option.some f
 (* right now assumes all shapes are two sided *)
 type shape_intersection = {
   point : Vec3.t;
-  outward_normal : Vec3.t;
   tex_coord : Texture.tex_coord;
   medium_transition : Medium.transition;
-      (* local basis *)
-      (* du: Vec3.t; *)
-      (* dv: Vec3.t; *)
+  (* local basis *)
+  ds : Vec3.t;
+  outward_normal : Vec3.t;
+  (* dt calcualted by outward_normal x ds *)
 }
 
 (* light sample from a point *)

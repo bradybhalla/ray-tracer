@@ -74,4 +74,5 @@ let shape_intersection transform (si : shape_intersection) =
     outward_normal = normal transform si.outward_normal;
     tex_coord = si.tex_coord;
     medium_transition = si.medium_transition;
+    ds = vec transform si.ds |> Vec3.normalize;
   }

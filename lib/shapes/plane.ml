@@ -1,5 +1,6 @@
 open Math
 open Utils
+open Transform
 
 type t = { normal : Vec3.t; pos : Vec3.t; udir : Vec3.t; vdir : Vec3.t }
 type params = { normal : Vec3.t; pos : Vec3.t }
@@ -26,7 +27,7 @@ let create ({ normal; pos } : params) =
       vdir = default_v;
     }
   in
-  let tr : Transform.t =
+  let tr =
     if mag = 0.0 then [ Translation pos ]
     else [ Rotation (Vec3.normalize cross, asin mag); Translation pos ]
   in
@@ -58,4 +59,5 @@ let intersect { normal; pos; udir; vdir } (ray : Ray.t) =
                  v = Vec3.dot proj_pos vdir |> decimal;
                });
             medium_transition = Out2Out;
+            ds = udir |> Vec3.normalize;
           } )

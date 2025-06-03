@@ -1,5 +1,6 @@
 open Math
 open Utils
+open Medium
 
 (* NOTE: if sphere doesn't store the transforms, it is hard to
          calculate the result of scaling it. Maybe this could be
@@ -9,6 +10,8 @@ type t = {
   radius : float;
   transform : Transform.t;
   inv_transform : Transform.t;
+  (* reference unit vector to find *)
+  up : Vec3.t;
 }
 
 type params = { pos : Vec3.t; radius : float }
@@ -19,6 +22,7 @@ let create ({ pos; radius } : params) =
     radius;
     transform = Transform.identity;
     inv_transform = Transform.identity;
+    up = Vec3.create 0.0 0.0 1.0;
   }
 
 let tex_coord_of_point ({ pos; _ } : t) point : Texture.tex_coord =
@@ -39,25 +43,25 @@ let intersection_of_times (s : t) ray (t1, t2) =
   if t2 < 0.0 then
     (* both intersections are negative *)
     None
-  else if t1 > 0.0 then
-    (* both are positive (t1 is the min) *)
+  else
+    let t, trans =
+      if t1 > 0.0 then
+        (* both are positive (t1 is the min) *)
+        (t1, Out2In)
+      else
+        (* inside sphere (t2 is min positive) *)
+        (t2, In2Out)
+    in
+    let point = Ray.at ray t in
+    let outward_normal = point -@ s.pos |> Vec3.normalize in
     Some
       ( t1,
         {
-          point = Ray.at ray t1;
-          outward_normal = Ray.at ray t1 -@ s.pos |> Vec3.normalize;
-          tex_coord = tex_coord_of_point s (Ray.at ray t1);
-          medium_transition = Out2In;
-        } )
-  else
-    (* inside sphere (t2 is min positive) *)
-    Some
-      ( t2,
-        {
-          point = Ray.at ray t2;
-          outward_normal = Ray.at ray t2 -@ s.pos |> Vec3.normalize;
-          tex_coord = tex_coord_of_point s (Ray.at ray t2);
-          medium_transition = In2Out;
+          point;
+          outward_normal;
+          tex_coord = tex_coord_of_point s point;
+          medium_transition = trans;
+          ds = Vec3.cross outward_normal s.up |> Vec3.normalize;
         } )
 
 let transform_intersection tr (t, si) =

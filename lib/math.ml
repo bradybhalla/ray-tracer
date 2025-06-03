@@ -38,6 +38,7 @@ module Vec3 = struct
   let mag_sq v = dot v v
 
   let assert_unit v = ignore (safe_clamp ~minv:1.0 ~maxv:1.0 (mag_sq v))
+  let assert_perp u v = ignore (safe_clamp ~minv:0.0 ~maxv:0.0 (dot u v))
 
   let normalize v =
     let len = sqrt (dot v v) in
