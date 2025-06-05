@@ -36,7 +36,6 @@ module Vec3 = struct
   let max m v = { x = max m v.x; y = max m v.y; z = max m v.z }
   let mag v = sqrt (dot v v)
   let mag_sq v = dot v v
-
   let assert_unit v = ignore (safe_clamp ~minv:1.0 ~maxv:1.0 (mag_sq v))
   let assert_perp u v = ignore (safe_clamp ~minv:0.0 ~maxv:0.0 (dot u v))
 

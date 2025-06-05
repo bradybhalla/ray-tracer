@@ -51,7 +51,8 @@ let intersect { normal; pos; udir; vdir } (ray : Ray.t) =
         ( t,
           {
             point = Ray.at ray t;
-            outward_normal = (if not flip_normal then normal else normal *@ -1.0);
+            outward_normal =
+              (if not flip_normal then normal else normal *@ -1.0);
             tex_coord =
               (let proj_pos = Ray.at ray t -@ pos in
                {

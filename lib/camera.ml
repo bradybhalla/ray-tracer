@@ -38,14 +38,14 @@ let create { pos; look_at; pixel_height; fov; aspect_ratio; pixel_jitter } =
   { fov; aspect_ratio; pos; ex; ey; ez; pixel_jitter; pixel_height }
 
 (* pixel dimension of the camera *)
-let get_pixel_dim (camera: t) =
+let get_pixel_dim (camera : t) =
   let cols =
     int_of_float (camera.aspect_ratio *. float_of_int camera.pixel_height)
   in
   let rows = camera.pixel_height in
   (cols, rows)
 
-let get_ray ~(camera: t) ~col ~row : Ray.t =
+let get_ray ~(camera : t) ~col ~row : Ray.t =
   (* dimension of the camera in scene coords if its origin was a distance of 1 away *)
   let virtual_width = camera.aspect_ratio *. 2.0 *. tan (camera.fov /. 2.0) in
   let virtual_height = 2.0 *. tan (camera.fov /. 2.0) in

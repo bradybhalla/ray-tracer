@@ -11,8 +11,7 @@ type shape_intersection = {
   medium_transition : Medium.transition;
   (* local basis *)
   ds : Vec3.t;
-  outward_normal : Vec3.t;
-  (* dt calcualted by outward_normal x ds *)
+  outward_normal : Vec3.t; (* dt calcualted by outward_normal x ds *)
 }
 
 (* light sample from a point *)
