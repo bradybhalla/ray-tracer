@@ -3,24 +3,79 @@ open Ray_tracer.Math
 open Ray_tracer.Transform
 open Scene_utils
 
+let sph_phi (w : Vec3.t) =
+  let p = Float.atan2 w.y w.z in
+  if p < 0.0 then p +. (2.0 *. Float.pi) else p
+
+let sph_theta (w : Vec3.t) = acos w.z
+let ax = 0.2
+let ay = 0.2
+
+let lambda (w : Vec3.t) =
+  let theta = sph_theta w in
+  let phi = sph_phi w in
+  let tan2theta = Float.pow (Float.tan theta) 2.0 in
+  let alpha2 = Float.pow (cos phi *. ax) 2.0 +. Float.pow (sin phi *. ay) 2.0 in
+  (sqrt (1.0 +. (alpha2 *. tan2theta)) -. 1.0) /. 2.0
+
+let d_single (wm : Vec3.t) =
+  let tm = sph_theta wm in
+  let pm = sph_phi wm in
+  let denom =
+    Float.pi *. ax *. ay
+    *. Float.pow (cos tm) 4.0
+    *. Float.pow
+         (1.0
+         +. tan tm *. tan tm
+            *. ((cos pm *. cos pm /. ax /. ax) +. (sin pm *. sin pm /. ay /. ay))
+         )
+         2.0
+  in
+  1.0 /. denom
+
 let materials pixel_height _ =
+  let open Vec3 in
+  let make_bsdf color : Material.bsdf =
+   fun ~wo ~wi ->
+    if wo.z < 0.0 || wi.z < 0.0 then Vec3.zero ()
+    else
+      let g wo wi = 1.0 /. (1.0 +. lambda wo +. lambda wi) in
+      let wm = wi +@ wo |> Vec3.normalize in
+      let fres =
+        1.0
+        (*fr_complex (Vec3.dot wo wm |> abs_float) eta k*)
+      in
+      let f = d_single wm *. fres *. g wo wi /. (4.0 *. wi.z *. wo.z) in
+      color *@ f
+  in
   Scene.create
     ~camera:
       (Camera.create
          {
            Camera.default_params with
-           pos = Vec3.create 0.0 (-1.0) (-8.0);
+           pos = Vec3.create 0.0 (-1.0) (-10.0);
            look_at = Vec3.create 0.0 (-1.0) 0.0;
+           fov = 0.7;
            pixel_height;
          })
     ~primitives:
       [
         (* sphere_on_y1 (-5.0) 0.0 (`Checkerboard (9, 22)) 2.0; *)
-        sphere_on_y1 0.0 0.0 `White 2.0;
-        (* sphere_on_y1 5.0 0.0 `Red 2.0; *)
+        sphere_on_y1 0.0 0.0 (`BSDF (make_bsdf (Vec3.create 1.0 1.0 1.0))) 2.0;
+        sphere_on_y1 (-4.0) (-2.0)
+          (`BSDF (make_bsdf (Vec3.create 0.7 0.3 0.3)))
+          2.0;
         ground `White 1.0;
+        (* ground (`BSDF (make_bsdf (Vec3.create 0.7 0.7 0.7))) 1.0; *)
+        triangle_light_at (Vec3.zero ()) 2.0 3.0
+        % [
+            Transform.Rotation (Vec3.create 1.0 0.0 0.0, Float.pi /. 2.0);
+            Transform.Rotation (Vec3.create 0.0 (-1.0) (-1.0), Float.pi /. 4.0);
+            Transform.Translation (Vec3.create 4.5 (-2.0) 0.0);
+          ];
+        triangle_light_at (Vec3.create (-4.0) (-5.0) (-3.0)) 1.0 3.0;
       ]
-    ~external_lights:[ Infinite (Environment (Vec3.create 2.0 2.0 2.0)) ]
+    ~external_lights:[ Infinite (Environment (Vec3.create 0.5 0.5 0.5)) ]
 
 let lens pixel_height t =
   let t = 2.0 *. Float.pi *. t in

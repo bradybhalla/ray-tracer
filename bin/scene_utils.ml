@@ -37,6 +37,7 @@ let mc =
   | `Mirror -> Mirror
   | `Glass -> Glass
   | `Earth -> Diffuse { tex = tex_earth }
+  | `BSDF f -> BSDF f
 
 let ( % ) (prim : Primitive.t) tr =
   { prim with shape = Shape.transform ~tr ~shape:prim.shape }
