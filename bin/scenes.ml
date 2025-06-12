@@ -33,7 +33,8 @@ let d_single (wm : Vec3.t) =
   in
   1.0 /. denom
 
-let materials pixel_height _ =
+let materials pixel_height t =
+  let t = t *. 2.0 *. Float.pi in
   let open Vec3 in
   let make_bsdf color : Material.bsdf =
    fun ~wo ~wi ->
@@ -53,7 +54,7 @@ let materials pixel_height _ =
       (Camera.create
          {
            Camera.default_params with
-           pos = Vec3.create 0.0 (-1.0) (-10.0);
+           pos = Vec3.create (-10.0 *. sin t) (-1.0) (-10.0 *. cos t);
            look_at = Vec3.create 0.0 (-1.0) 0.0;
            fov = 0.7;
            pixel_height;
@@ -66,16 +67,13 @@ let materials pixel_height _ =
           (`BSDF (make_bsdf (Vec3.create 0.7 0.3 0.3)))
           2.0;
         ground `White 1.0;
-        (* ground (`BSDF (make_bsdf (Vec3.create 0.7 0.7 0.7))) 1.0; *)
-        triangle_light_at (Vec3.zero ()) 2.0 3.0
-        % [
-            Transform.Rotation (Vec3.create 1.0 0.0 0.0, Float.pi /. 2.0);
+        triangle_light_at (Vec3.zero ()) 1.5 3.0
+        % [ Transform.Rotation (Vec3.create 1.0 0.0 0.0, Float.pi /. 2.0);
             Transform.Rotation (Vec3.create 0.0 (-1.0) (-1.0), Float.pi /. 4.0);
-            Transform.Translation (Vec3.create 4.5 (-2.0) 0.0);
-          ];
-        triangle_light_at (Vec3.create (-4.0) (-5.0) (-3.0)) 1.0 3.0;
+            Transform.Translation (Vec3.create 4.5 (-2.0) 0.0); ];
+        triangle_light_at (Vec3.create (-4.0) (-5.0) (-3.0)) 1.5 3.0;
       ]
-    ~external_lights:[ Infinite (Environment (Vec3.create 0.5 0.5 0.5)) ]
+    ~external_lights:[ Light.Infinite (Environment (Vec3.create 0.5 0.5 0.5)) ]
 
 let lens pixel_height t =
   let t = 2.0 *. Float.pi *. t in

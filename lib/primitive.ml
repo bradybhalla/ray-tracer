@@ -4,7 +4,7 @@ open Math
 type t = {
   shape : Shape.t;
   material : Material.t;
-  light : Light.geometric_light option;
+  light : Texture.t option;
   medium : Medium.spec;
 }
 

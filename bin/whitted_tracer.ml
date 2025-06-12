@@ -2,6 +2,7 @@ open Ray_tracer
 open Ray_tracer.Utils
 open Ray_tracer.Primitive
 open Ray_tracer.Math
+open Ray_tracer.Light
 
 let get_diffuse_color scene int light tex =
   let color = Texture.eval tex int.si.tex_coord in
@@ -19,9 +20,14 @@ let get_diffuse_color scene int light tex =
     *@@ color
 
 let get_emitted_color light_int =
-  Option.fold ~none:(Vec3.zero ())
-    ~some:(fun light -> Light.emitted_color ~light ~light_si:light_int.si)
-    light_int.prim.light
+  let prim = light_int.prim in
+  prim.light
+  >>= (fun brightness ->
+  Some
+    (Light.emitted_color
+       ~light:{ shape = prim.shape; brightness }
+       ~light_si:light_int.si))
+  |> Option.value ~default:(Vec3.zero ())
 
 let rec whitted ~(scene : Scene.t) ~(ray : Ray.t) ~max_depth =
   if max_depth = 0 then Vec3.zero ()

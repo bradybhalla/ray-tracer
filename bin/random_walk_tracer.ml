@@ -4,9 +4,15 @@ open Ray_tracer.Math
 open Ray_tracer.Primitive
 
 let get_emitted_color light_int =
-  Option.fold ~none:(Vec3.zero ())
-    ~some:(fun light -> Light.emitted_color ~light ~light_si:light_int.si)
-    light_int.prim.light
+  let prim = light_int.prim in
+  prim.light
+  >>= (fun brightness ->
+  Some
+    (Light.emitted_color
+       ~light:{ shape = prim.shape; brightness }
+       ~light_si:light_int.si))
+  |> Option.value ~default:(Vec3.zero ())
+
 
 let rec random_walk ~(scene : Scene.t) ~(ray : Ray.t) ~max_depth =
   if max_depth <= 0 then Vec3.create 0.0 0.0 0.0

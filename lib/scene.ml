@@ -14,7 +14,9 @@ type t = {
 let create ~(camera : Camera.t) ~(primitives : Primitive.t list)
     ~(external_lights : Light.t list) =
   let light_of_prim p =
-    match p.light with None -> None | Some l -> Some (Geometric l)
+    match p.light with
+    | None -> None
+    | Some brightness -> Some (Geometric {shape=p.shape; brightness})
   in
   let finite_of_light l =
     match l with Geometric _ | Point _ -> Some l | Infinite _ -> None

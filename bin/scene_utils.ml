@@ -98,10 +98,5 @@ let triangle_light_at pos r power : Primitive.t =
     shape;
     material = mc `Black;
     medium = Medium.default_spec;
-    light =
-      Some
-        {
-          shape;
-          brightness = Texture.Constant (Vec3.create 1.0 1.0 1.0 *@ power);
-        };
+    light = Some (Texture.Constant (Vec3.create 1.0 1.0 1.0 *@ power));
   }
