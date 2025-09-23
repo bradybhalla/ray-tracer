@@ -9,6 +9,7 @@ let create_scene = Scenes.materials 150
 (* let create_scene = Scenes.onshape 300 *)
 
 let params : Render.params = { samples_per_pixel = 200; max_depth = 10 }
+
 (* let tracer = Whitted_tracer.whitted *)
 let tracer = Random_walk_tracer.random_walk
 

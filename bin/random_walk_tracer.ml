@@ -13,7 +13,6 @@ let get_emitted_color light_int =
        ~light_si:light_int.si))
   |> Option.value ~default:(Vec3.zero ())
 
-
 let rec random_walk ~(scene : Scene.t) ~(ray : Ray.t) ~max_depth =
   if max_depth <= 0 then Vec3.create 0.0 0.0 0.0
   else

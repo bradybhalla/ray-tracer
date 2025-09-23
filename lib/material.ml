@@ -15,5 +15,8 @@ let to_bsdf ~(mat : t) ~(si : shape_intersection) : bsdf =
           if same_hemisphere then reflectance *. 1.0 /. Float.pi else 0.0
         in
         color *@ frac
-  | Glass | Mirror -> failwith "TODO"
+  | Glass | Mirror ->
+      failwith
+        "perfectly specular materials don't work with bsdfs. In order to \
+         render global illumination you have to revert a few commits."
   | BSDF f -> f
