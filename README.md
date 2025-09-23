@@ -13,7 +13,9 @@ Some features supported by this ray tracer are:
 - applying linear transforms to shapes
 
 ## Sample images
-TODO GENERATE
+<img width="533" height="300" alt="bsdf" src="https://github.com/user-attachments/assets/7a26889c-7a44-40b6-b24f-a13547b35606" />
+<img width="533" height="300" alt="earth" src="https://github.com/user-attachments/assets/bde4f01c-b8ca-4a32-b8cf-24afebc00427" />
+<img width="533" height="300" alt="global_illumination" src="https://github.com/user-attachments/assets/e694d7c3-b570-4c05-9498-ed4e64f85cc3" />
 
 ## Usage
 - `make render` -- render a single image from "single_render.ml"
