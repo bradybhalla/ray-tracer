@@ -17,6 +17,5 @@ let to_bsdf ~(mat : t) ~(si : shape_intersection) : bsdf =
         color *@ frac
   | Glass | Mirror ->
       failwith
-        "perfectly specular materials don't work with bsdfs. In order to \
-         render global illumination you have to revert a few commits."
+        "perfectly specular materials don't work with bsdfs."
   | BSDF f -> f

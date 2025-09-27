@@ -21,22 +21,34 @@ let rec random_walk ~(scene : Scene.t) ~(ray : Ray.t) ~max_depth =
         sum_over
           (fun il -> Light.escaped_ray_color ~light:il ~ray)
           scene.infinite_lights
-    | Some int ->
-        let emitted = get_emitted_color int in
-        let bsdf = Material.to_bsdf ~mat:int.prim.material ~si:int.si in
-        let wi = Sample.unit_vec3 () in
-        let fcos =
-          bsdf
-            ~wo:(Primitive.dir_to_local int.wo int.si)
-            ~wi:(Primitive.dir_to_local wi int.si)
-          *@ (Vec3.dot wi int.si.outward_normal |> abs_float)
-        in
-        let li =
-          if Vec3.mag_sq fcos = 0.0 then Vec3.zero ()
-          else
+    | Some int -> (
+        match int.prim.material with
+        | Mirror ->
+            random_walk ~scene ~ray:(Ray.reflect ray int.si)
+              ~max_depth:(max_depth - 1)
+            +@ get_emitted_color int
+        | Glass ->
             let ray' =
-              Ray.create ~origin:(int.si.point +@ (wi *@ eps)) ~dir:wi
+              Ray.refract ray int.si int.prim.medium int.si.medium_transition
             in
             random_walk ~scene ~ray:ray' ~max_depth:(max_depth - 1)
-        in
-        emitted +@ (fcos *@@ li /@ (1.0 /. (4.0 *. Float.pi)))
+            +@ get_emitted_color int
+        | material ->
+            let emitted = get_emitted_color int in
+            let bsdf = Material.to_bsdf ~mat:material ~si:int.si in
+            let wi = Sample.unit_vec3 () in
+            let fcos =
+              bsdf
+                ~wo:(Primitive.dir_to_local int.wo int.si)
+                ~wi:(Primitive.dir_to_local wi int.si)
+              *@ (Vec3.dot wi int.si.outward_normal |> abs_float)
+            in
+            let li =
+              if Vec3.mag_sq fcos = 0.0 then Vec3.zero ()
+              else
+                let ray' =
+                  Ray.create ~origin:(int.si.point +@ (wi *@ eps)) ~dir:wi
+                in
+                random_walk ~scene ~ray:ray' ~max_depth:(max_depth - 1)
+            in
+            emitted +@ (fcos *@@ li /@ (1.0 /. (4.0 *. Float.pi))))
